@@ -6,15 +6,59 @@
 /*----------------------------------------------------------------------------*/
 
 #include "Robot.h"
-
 #include <iostream>
-
+#include <frc/Joystick.h>
 #include <frc/smartdashboard/SmartDashboard.h>
+#include <frc/drive/DifferentialDrive.h>
+#include "rev/CANSparkMax.h"
+#include <frc/encoder.h>
+#include "ctre/Phoenix.h"
+#include <frc/DigitalInput.h>
+#include <frc/DigitalSource.h>
+#include "frc/WPILib.h"
+#include <stdio.h>
+#include <memory>
+#include <chrono>
+#include <thread>
+#include <stdlib.h>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/core/core.hpp>
+#include "networktables/NetworkTable.h"
+#include "networktables/NetworkTableInstance.h"
+#include <math.h>
 
+using namespace frc;
+/*
+888b     d888          888                          .d8888b.           888                      
+8888b   d8888          888                         d88P  Y88b          888                      
+88888b.d88888          888                         Y88b.               888                      
+888Y88888P888  .d88b.  888888 .d88b.  888d888       "Y888b.    .d88b.  888888 888  888 88888b.  
+888 Y888P 888 d88""88b 888   d88""88b 888P"            "Y88b. d8P  Y8b 888    888  888 888 "88b 
+888  Y8P  888 888  888 888   888  888 888                "888 88888888 888    888  888 888  888 
+888   "   888 Y88..88P Y88b. Y88..88P 888          Y88b  d88P Y8b.     Y88b.  Y88b 888 888 d88P 
+888       888  "Y88P"   "Y888 "Y88P"  888           "Y8888P"   "Y8888   "Y888  "Y88888 88888P"  
+                                                                                       888      
+                                                                                       888      
+                                                                                       888      
+*/
+
+static const int leftleadmotorID = 2, rightleadmotorID = 4, leftfollowmotorID = 3 , rightfollowermotorID = 5;
+  rev::CANSparkMax m_leftleadmotor{leftleadmotorID, rev::CANSparkMax::MotorType::kBrushless};
+  rev::CANSparkMax m_leftfollowermotor{leftfollowmotorID, rev::CANSparkMax::MotorType::kBrushless};
+  rev::CANSparkMax m_rightleadmotor{rightleadmotorID, rev::CANSparkMax::MotorType::kBrushless};
+  rev::CANSparkMax m_rightfollowermotor{rightfollowermotorID, rev::CANSparkMax::MotorType::kBrushless};
+  
+
+  frc::DifferentialDrive m_robotDrive{m_leftleadmotor, m_rightleadmotor};
+  
+  frc::Joystick *m_stick;
 void Robot::RobotInit() {
   m_chooser.SetDefaultOption(kAutoNameDefault, kAutoNameDefault);
   m_chooser.AddOption(kAutoNameCustom, kAutoNameCustom);
   frc::SmartDashboard::PutData("Auto Modes", &m_chooser);
+
+
+  m_stick = new Joystick(0);
 }
 
 /**
@@ -59,9 +103,14 @@ void Robot::AutonomousPeriodic() {
   }
 }
 
-void Robot::TeleopInit() {}
+void Robot::TeleopInit() {
+  m_leftfollowermotor.Follow(m_leftleadmotor);
+  m_rightfollowermotor.Follow(m_rightleadmotor);
+}
 
-void Robot::TeleopPeriodic() {}
+void Robot::TeleopPeriodic() {
+  m_robotDrive.ArcadeDrive(-m_stick->GetY(), m_stick->GetZ());
+}
 
 void Robot::TestPeriodic() {}
 
