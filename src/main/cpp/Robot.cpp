@@ -57,9 +57,13 @@ void Robot::RobotInit() {
   m_chooser.SetDefaultOption(kAutoNameDefault, kAutoNameDefault);
   m_chooser.AddOption(kAutoNameCustom, kAutoNameCustom);
   frc::SmartDashboard::PutData("Auto Modes", &m_chooser);
+  int SpeedID = 7;
 
-
+  SpeedTest = new WPI_TalonSRX(SpeedID);
   m_stick = new Joystick(0);
+
+  frc::SmartDashboard::PutNumber("rpm",0);
+  SmartDashboard::PutNumber("trigger", 0);
 }
 
 /**
@@ -111,6 +115,15 @@ void Robot::TeleopInit() {
 
 void Robot::TeleopPeriodic() {
   m_robotDrive.ArcadeDrive(-m_stick->GetY(), m_stick->GetZ());
+
+
+  //Speed test//
+  if(m_stick->GetRawAxis(4) > 0 || (m_stick->GetRawAxis(4)) < 0){
+    SpeedTest->Set(ControlMode::PercentOutput, (m_stick->GetRawAxis(4)));
+    SmartDashboard::PutNumber("rpm", (SpeedTest->GetSelectedSensorVelocity(0)));
+    SmartDashboard::PutNumber("trigger", m_stick->GetRawAxis(4));
+
+  }
 }
 
 void Robot::TestPeriodic() {}

@@ -8,7 +8,12 @@
 #pragma once
 
 #include <string>
-
+#include "ctre/Phoenix.h"
+#include <frc/DigitalInput.h>
+#include <frc/DigitalSource.h>
+#include <frc/IterativeRobot.h>
+#include <frc/smartdashboard/SendableChooser.h>
+#include <Frc/WPILib.h>
 #include <frc/TimedRobot.h>
 #include <frc/smartdashboard/SendableChooser.h>
 
@@ -21,6 +26,9 @@ class Robot : public frc::TimedRobot {
   void TeleopInit() override;
   void TeleopPeriodic() override;
   void TestPeriodic() override;
+  TalonSRX * SpeedTest;
+
+
 
  private:
   frc::SendableChooser<std::string> m_chooser;
