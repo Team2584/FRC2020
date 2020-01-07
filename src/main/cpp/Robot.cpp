@@ -6,15 +6,35 @@
 /*----------------------------------------------------------------------------*/
 
 #include "Robot.h"
-
 #include <iostream>
-
+#include <frc/Joystick.h>
 #include <frc/smartdashboard/SmartDashboard.h>
+#include <frc/drive/DifferentialDrive.h>
+#include "rev/CANSparkMax.h"
+#include <frc/encoder.h>
+#include "ctre/Phoenix.h"
+#include <frc/DigitalInput.h>
+#include <frc/DigitalSource.h>
+#include "frc/WPILib.h"
+#include <stdio.h>
+#include <memory>
+#include <chrono>
+#include <thread>
+#include <stdlib.h>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/core/core.hpp>
+#include "frc/smartdashboard/Smartdashboard.h"
+#include "networktables/NetworkTable.h"
+#include "networktables/NetworkTableInstance.h"
 
 void Robot::RobotInit() {
   m_chooser.SetDefaultOption(kAutoNameDefault, kAutoNameDefault);
   m_chooser.AddOption(kAutoNameCustom, kAutoNameCustom);
   frc::SmartDashboard::PutData("Auto Modes", &m_chooser);
+
+
+
+  
 }
 
 /**
