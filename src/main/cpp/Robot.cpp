@@ -44,14 +44,14 @@ using namespace frc;
 //for testing//
 
 static const int leftleadmotorID = 2, rightleadmotorID = 4, leftfollowmotorID = 3 , rightfollowermotorID = 5;
-  rev::CANSparkMax m_leftleadmotor{leftleadmotorID, rev::CANSparkMax::MotorType::kBrushless};
+ /* rev::CANSparkMax m_leftleadmotor{leftleadmotorID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax m_leftfollowermotor{leftfollowmotorID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax m_rightleadmotor{rightleadmotorID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax m_rightfollowermotor{rightfollowermotorID, rev::CANSparkMax::MotorType::kBrushless};
   
 
   frc::DifferentialDrive m_robotDrive{m_leftleadmotor, m_rightleadmotor};
-  
+  */
   frc::Joystick *m_stick;
 void Robot::RobotInit() {
   m_chooser.SetDefaultOption(kAutoNameDefault, kAutoNameDefault);
@@ -109,8 +109,8 @@ void Robot::AutonomousPeriodic() {
 }
 
 void Robot::TeleopInit() {
-  m_leftfollowermotor.Follow(m_leftleadmotor);
-  m_rightfollowermotor.Follow(m_rightleadmotor);
+  /*m_leftfollowermotor.Follow(m_leftleadmotor);
+  m_rightfollowermotor.Follow(m_rightleadmotor);*/
 }
 
 void Robot::TeleopPeriodic() {
@@ -124,7 +124,7 @@ void Robot::TeleopPeriodic() {
 888  .d88P 888     888  Y8bd8P  Y8b.     
 8888888P"  888     888   Y88P    "Y8888 
   */
-  m_robotDrive.ArcadeDrive(-m_stick->GetY(), m_stick->GetZ());
+  //m_robotDrive.ArcadeDrive(-m_stick->GetY(), m_stick->GetZ());
 
 
   //Speed test//
