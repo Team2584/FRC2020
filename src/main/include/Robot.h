@@ -8,9 +8,13 @@
 #pragma once
 
 #include <string>
-
-#include <frc/TimedRobot.h>
+#include "ctre/Phoenix.h"
+#include <frc/DigitalInput.h>
+#include <frc/DigitalSource.h>
+#include <frc/IterativeRobot.h>
 #include <frc/smartdashboard/SendableChooser.h>
+#include <Frc/WPILib.h>
+
 
 class Robot : public frc::TimedRobot {
  public:
@@ -29,4 +33,8 @@ class Robot : public frc::TimedRobot {
   const std::string kAutoNameDefault = "Default";
   const std::string kAutoNameCustom = "My Auto";
   std::string m_autoSelected;
+
+  double Ahorz, tA, tS;
+  double Avert;
+
 };
