@@ -53,14 +53,20 @@ void Robot::RobotInit() {
   m_chooser.SetDefaultOption(kAutoNameDefault, kAutoNameDefault);
   m_chooser.AddOption(kAutoNameCustom, kAutoNameCustom);
   frc::SmartDashboard::PutData("Auto Modes", &m_chooser);
-  Ahorz = 0, Avert = 0, tA = 0, tS = 0;
 
   m_stick = new Joystick(0);
 
 
 SmartDashboard::PutNumber("horizontal", 0);
 SmartDashboard::PutNumber("nums", 0);
-  
+   table = nt::NetworkTableInstance::GetDefault().GetTable("limelight");
+  Ahorz = table->GetNumber("tx",0.0);
+  Avert = table->GetNumber("ty",0.0);
+  double tA = table->GetNumber("ta",0.0);
+  double tS = table->GetNumber("ts",0.0);
+  table->PutNumber("pipeline", 3);
+ m_leftfollowermotor.Follow(m_leftleadmotor);
+ m_rightfollowermotor.Follow(m_rightleadmotor);
 }
 
 /**
@@ -106,20 +112,12 @@ void Robot::AutonomousPeriodic() {
 }
 
 void Robot::TeleopInit() {
-  table = nt::NetworkTableInstance::GetDefault().GetTable("limelight");
-  Ahorz = table->GetNumber("tx",0.0);
-  Avert = table->GetNumber("ty",0.0);
-  double tA = table->GetNumber("ta",0.0);
-  double tS = table->GetNumber("ts",0.0);
-  table->PutNumber("pipeline", 3);
- m_leftfollowermotor.Follow(m_leftleadmotor);
- m_rightfollowermotor.Follow(m_rightleadmotor);
 }
 
 void Robot::TeleopPeriodic() {
 Ahorz = table->GetNumber("tx",0.0);
 
-if(m_stick->GetRawButton(1) == 1){ 
+/*if(m_stick->GetRawButton(1) == 1){ 
     double rot = (((Ahorz / 180)*14.125) * M_PI);
     double r1 = rot/3;
     double t1 = r1/(2 * M_PI);
@@ -150,7 +148,7 @@ if(m_stick->GetRawButton(1) == 1){
 else{
   m_rightleadmotor.Set(0);
   m_leftleadmotor.Set(0);
-}
+}*/
 }
 
 void Robot::TestPeriodic() {}
