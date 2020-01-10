@@ -38,7 +38,7 @@ double speedv = 0.0, wristpos = 0.0, errorv = 0.0, interv = 0.0, derav = 0.0, pr
 double kP = 0.3325, kI = 0.00075, kD = 0.016, kIz = 0.5, kFF = 0, kMaxOutput = 0.25, kMinOutput = -0.25, kMaxOutputL = 0.25, kMinOutputL = -0.25; 
 
 
-double leftleadmotorID = 2, rightleadmotorID = 4, leftfollowmotorID = 3 , rightfollowermotorID = 5, elevid = 1;
+double leftleadmotorID = 1, rightleadmotorID = 4, leftfollowmotorID = 2 , rightfollowermotorID = 3, elevid = 1;
   rev::CANSparkMax m_leftleadmotor{leftleadmotorID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax m_leftfollowermotor{leftfollowmotorID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax m_rightleadmotor{rightleadmotorID, rev::CANSparkMax::MotorType::kBrushless};
@@ -47,6 +47,8 @@ double leftleadmotorID = 2, rightleadmotorID = 4, leftfollowmotorID = 3 , rightf
 
 frc::Joystick *m_stick;
 
+std::shared_ptr<NetworkTable> table;
+
 void Robot::RobotInit() {
   m_chooser.SetDefaultOption(kAutoNameDefault, kAutoNameDefault);
   m_chooser.AddOption(kAutoNameCustom, kAutoNameCustom);
@@ -54,6 +56,10 @@ void Robot::RobotInit() {
   Ahorz = 0, Avert = 0, tA = 0, tS = 0;
 
   m_stick = new Joystick(0);
+
+
+SmartDashboard::PutNumber("horizontal", 0);
+SmartDashboard::PutNumber("nums", 0);
   
 }
 
@@ -100,19 +106,29 @@ void Robot::AutonomousPeriodic() {
 }
 
 void Robot::TeleopInit() {
-  std::shared_ptr<NetworkTable> table = nt::NetworkTableInstance::GetDefault().GetTable("limelight");
+  table = nt::NetworkTableInstance::GetDefault().GetTable("limelight");
   Ahorz = table->GetNumber("tx",0.0);
   Avert = table->GetNumber("ty",0.0);
   double tA = table->GetNumber("ta",0.0);
   double tS = table->GetNumber("ts",0.0);
-
+  table->PutNumber("pipeline", 3);
  m_leftfollowermotor.Follow(m_leftleadmotor);
  m_rightfollowermotor.Follow(m_rightleadmotor);
 }
 
 void Robot::TeleopPeriodic() {
-if(m_stick->GetRawButtonPressed(1) == 1){
-     errorv = Ahorz;
+Ahorz = table->GetNumber("tx",0.0);
+
+if(m_stick->GetRawButton(1) == 1){ 
+    double rot = (((Ahorz / 180)*14.125) * M_PI);
+    double r1 = rot/3;
+    double t1 = r1/(2 * M_PI);
+    double rf1 = (t1 * 8.68);
+
+    SmartDashboard::PutNumber("horizontal", Ahorz);
+    SmartDashboard::PutNumber("nums", rf1);
+
+     errorv = rf1;
         interv = interv + errorv;  
 
         if(errorv == 0)
@@ -128,8 +144,8 @@ if(m_stick->GetRawButtonPressed(1) == 1){
         speedv = (kP * errorv) + (kI * interv) + (kD * derav);
         
         double wspeed = speedv;
-        m_rightleadmotor.Set(-wspeed * kMaxOutput);
-        m_leftleadmotor.Set(-wspeed * kMaxOutputL);
+        m_rightleadmotor.Set(wspeed * kMaxOutput);
+        m_leftleadmotor.Set(wspeed * kMaxOutputL);
 }
 else{
   m_rightleadmotor.Set(0);
