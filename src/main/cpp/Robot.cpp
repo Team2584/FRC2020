@@ -54,6 +54,7 @@ void Robot::RobotInit() {
   m_chooser.AddOption(kAutoNameCustom, kAutoNameCustom);
   frc::SmartDashboard::PutData("Auto Modes", &m_chooser);
   Ahorz = 0, Avert = 0, tA = 0, tS = 0;
+  //TurretTest = new TalonSRX(7);
 
   m_stick = new Joystick(0);
 
@@ -125,6 +126,8 @@ if(m_stick->GetRawButton(1) == 1){
     double t1 = r1/(2 * M_PI);
     double rf1 = (t1 * 8.68);
 
+    double rotation = (Ahorz/360) * 426;
+
     SmartDashboard::PutNumber("horizontal", Ahorz);
     SmartDashboard::PutNumber("nums", rf1);
 
@@ -144,6 +147,7 @@ if(m_stick->GetRawButton(1) == 1){
         speedv = (kP * errorv) + (kI * interv) + (kD * derav);
         
         double wspeed = speedv;
+        //TurretTest->Set(ControlMode::PercentOutput, wspeed);
         m_rightleadmotor.Set(wspeed * kMaxOutput);
         m_leftleadmotor.Set(wspeed * kMaxOutputL);
 }
