@@ -43,27 +43,31 @@ using namespace frc;
 */
 //for testing//
 
-static const int leftleadmotorID = 2, rightleadmotorID = 4, leftfollowmotorID = 3 , rightfollowermotorID = 5;
- /* rev::CANSparkMax m_leftleadmotor{leftleadmotorID, rev::CANSparkMax::MotorType::kBrushless};
+static const int leftleadmotorID = 1, rightleadmotorID = 3, leftfollowmotorID = 2 , rightfollowermotorID = 4;
+  rev::CANSparkMax m_leftleadmotor{leftleadmotorID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax m_leftfollowermotor{leftfollowmotorID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax m_rightleadmotor{rightleadmotorID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax m_rightfollowermotor{rightfollowermotorID, rev::CANSparkMax::MotorType::kBrushless};
   
 
   frc::DifferentialDrive m_robotDrive{m_leftleadmotor, m_rightleadmotor};
-  */
+  
   frc::Joystick *m_stick;
+  
 void Robot::RobotInit() {
   m_chooser.SetDefaultOption(kAutoNameDefault, kAutoNameDefault);
   m_chooser.AddOption(kAutoNameCustom, kAutoNameCustom);
   frc::SmartDashboard::PutData("Auto Modes", &m_chooser);
-  int SpeedID = 7;
+  //int SpeedID = 7;
 
-  SpeedTest = new WPI_TalonSRX(SpeedID);
+  //SpeedTest = new WPI_TalonSRX(SpeedID);
   m_stick = new Joystick(0);
 
   frc::SmartDashboard::PutNumber("rpm",0);
   SmartDashboard::PutNumber("trigger", 0);
+
+  m_leftfollowermotor.Follow(m_leftleadmotor);
+  m_rightfollowermotor.Follow(m_rightleadmotor);
 }
 
 /**
@@ -124,14 +128,14 @@ void Robot::TeleopPeriodic() {
 888  .d88P 888     888  Y8bd8P  Y8b.     
 8888888P"  888     888   Y88P    "Y8888 
   */
-  //m_robotDrive.ArcadeDrive(-m_stick->GetY(), m_stick->GetZ());
+  m_robotDrive.ArcadeDrive(-m_stick->GetY(), m_stick->GetZ());
 
 
   //Speed test//
-  if(m_stick->GetRawAxis(4) > 0 || (m_stick->GetRawAxis(4)) < 0){
+  /*if(m_stick->GetRawAxis(4) > 0 || (m_stick->GetRawAxis(4)) < 0){
     SpeedTest->Set(ControlMode::PercentOutput, (m_stick->GetRawAxis(4)));
     SmartDashboard::PutNumber("rpm", (SpeedTest->GetSelectedSensorVelocity(0)));
-    SmartDashboard::PutNumber("trigger", m_stick->GetRawAxis(4));
+    SmartDashboard::PutNumber("trigger", m_stick->GetRawAxis(4));*/
 
 
 
@@ -176,7 +180,7 @@ Y88b  d88P 888 888 888  888  888 888 d88P
 888  T88b  888  888 888 888 
 888   T88b "Y888888 888 888
 */
-  }
+  //}
 }
 
 void Robot::TestPeriodic() {}
