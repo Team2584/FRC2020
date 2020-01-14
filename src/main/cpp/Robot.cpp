@@ -36,6 +36,7 @@ using namespace frc;
 
 double speedv = 0.0, wristpos = 0.0, errorv = 0.0, interv = 0.0, derav = 0.0, preverrorv = 0.0;
 double kP = 0.3325, kI = 0.00075, kD = 0.016, kIz = 0.5, kFF = 0, kMaxOutput = 0.25, kMinOutput = -0.25, kMaxOutputL = 0.25, kMinOutputL = -0.25; 
+int state = 0;
 
 
 /*double leftleadmotorID = 1, rightleadmotorID = 4, leftfollowmotorID = 2 , rightfollowermotorID = 3, elevid = 1;
@@ -156,21 +157,25 @@ void Robot::TeleopPeriodic() {
 else{
   TurretTest->Set(ControlMode::PercentOutput, 0);
 }*/
-if(m_stick->GetRawButtonPressed(1) == 1){
+if(m_stick->GetRawButtonPressed(1) == 1|| state == 1){
   Topfly->Set(ControlMode::PercentOutput,0.1);
   Botfly->Set(ControlMode::PercentOutput, 0.1);
+  state = 1;
 }
-if(m_stick->GetRawButtonPressed(2) == 1){
+if(m_stick->GetRawButtonPressed(2) == 1 || state == 2){
   Topfly->Set(ControlMode::PercentOutput,0.2);
   Botfly->Set(ControlMode::PercentOutput, 0.2);
+  state = 2;
 }
-if(m_stick->GetRawButtonPressed(3) == 1){
+if(m_stick->GetRawButtonPressed(3) == 1 || state == 3){
   Topfly->Set(ControlMode::PercentOutput,0.5);
   Botfly->Set(ControlMode::PercentOutput, 0.5);
+  state = 3;
 }
-if(m_stick->GetRawButtonPressed(4) == 1){
+if(m_stick->GetRawButtonPressed(4) == 1 || state == 4){
   Topfly->Set(ControlMode::PercentOutput,0.6);
   Botfly->Set(ControlMode::PercentOutput, 0.4);
+  state = 4;
 }
 else{
    Topfly->Set(ControlMode::PercentOutput,0);
