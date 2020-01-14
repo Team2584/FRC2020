@@ -50,10 +50,10 @@ frc::Joystick *m_stick;
 std::shared_ptr<NetworkTable> table;
 
 void Robot::RobotInit() {
-  m_chooser.SetDefaultOption(kAutoNameDefault, kAutoNameDefault);
-  m_chooser.AddOption(kAutoNameCustom, kAutoNameCustom);
-  frc::SmartDashboard::PutData("Auto Modes", &m_chooser);
-  Ahorz = 0, Avert = 0, tA = 0, tS = 0;
+  //m_chooser.SetDefaultOption(kAutoNameDefault, kAutoNameDefault);
+  //m_chooser.AddOption(kAutoNameCustom, kAutoNameCustom);
+  //frc::SmartDashboard::PutData("Auto Modes", &m_chooser);
+  double Ahorz = 0, Avert = 0, tA = 0, tS = 0;
   //TurretTest = new TalonSRX(6);
   Topfly = new TalonSRX(3);
   Botfly = new TalonSRX(7);
