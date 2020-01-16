@@ -46,8 +46,14 @@ int state = 0;
   rev::CANSparkMax m_rightfollowermotor{rightfollowermotorID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax m_elevmotor{elevid, rev::CANSparkMax::MotorType::kBrushless};
 */
-frc::Joystick *m_stick;
+  frc::Joystick *m_stick;
 
+  TalonSRX *TurretTest;
+  TalonSRX *Topfly;
+  TalonSRX *Botfly;
+  VictorSPX *Indexer;
+  VictorSPX *Intake1;
+  VictorSPX *Intake2;
 std::shared_ptr<NetworkTable> table;
 
 void Robot::RobotInit() {
