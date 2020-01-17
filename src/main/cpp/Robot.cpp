@@ -39,14 +39,14 @@ double kP = 0.3325, kI = 0.00075, kD = 0.016, kIz = 0.5, kFF = 0, kMaxOutput = 0
 int state = 0;
 
 
-/*double leftleadmotorID = 1, rightleadmotorID = 4, leftfollowmotorID = 2 , rightfollowermotorID = 3, elevid = 1;
+double leftleadmotorID = 1, rightleadmotorID = 4, leftfollowmotorID = 2 , rightfollowermotorID = 3;
   rev::CANSparkMax m_leftleadmotor{leftleadmotorID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax m_leftfollowermotor{leftfollowmotorID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax m_rightleadmotor{rightleadmotorID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax m_rightfollowermotor{rightfollowermotorID, rev::CANSparkMax::MotorType::kBrushless};
-  rev::CANSparkMax m_elevmotor{elevid, rev::CANSparkMax::MotorType::kBrushless};
-*/
+
   frc::Joystick *m_stick;
+  frc::Joystick *m_stick2;
 
   TalonSRX *TurretTest;
   TalonSRX *Topfly;
@@ -55,6 +55,8 @@ int state = 0;
   VictorSPX *Intake1;
   VictorSPX *Intake2;
 std::shared_ptr<NetworkTable> table;
+
+frc::DifferentialDrive m_robotDrive{m_leftleadmotor, m_rightleadmotor};
 
 void Robot::RobotInit() {
   //m_chooser.SetDefaultOption(kAutoNameDefault, kAutoNameDefault);
@@ -69,17 +71,21 @@ void Robot::RobotInit() {
 
   Indexer = new VictorSPX(4);
 
-  /*Intake1 = new VictorSPX(1);
-  Intake2 = new VictorSPX(2);*/
+  Intake1 = new VictorSPX(1);
+  Intake2 = new VictorSPX(2);
 
   m_stick = new Joystick(0);
+  m_stick2 = new Joystick(1);
 
 
 SmartDashboard::PutNumber("horizontal", 0);
 SmartDashboard::PutNumber("nums", 0);
-SmartDashboard::PutNumber("top", -0.075);
-SmartDashboard::PutNumber("bottom",0.75);
-  
+SmartDashboard::PutNumber("top", 1);
+SmartDashboard::PutNumber("bottom",1);
+SmartDashboard::PutNumber("P", kP);
+SmartDashboard::PutNumber("I", kI);
+SmartDashboard::PutNumber("D", kD); 
+SmartDashboard::PutNumber("*Speed", kMaxOutput); 
 }
 
 /**
@@ -131,8 +137,8 @@ void Robot::TeleopInit() {
   double tA = table->GetNumber("ta",0.0);
   double tS = table->GetNumber("ts",0.0);
   table->PutNumber("pipeline", 3);
- //m_leftfollowermotor.Follow(m_leftleadmotor);
- //m_rightfollowermotor.Follow(m_rightleadmotor);
+ m_leftfollowermotor.Follow(m_leftleadmotor);
+ m_rightfollowermotor.Follow(m_rightleadmotor);
 }
 
 
@@ -140,6 +146,8 @@ void Robot::TeleopPeriodic() {
 Ahorz = table->GetNumber("tx",0.0);
 double encoder = TurretTest->GetSelectedSensorPosition(0);
 double turn = (encoder/426) * 360; 
+
+
 if (turn + Ahorz > 90 || turn + Ahorz < -90){
   TurretTest->Set(ControlMode::PercentOutput, 0);
 }
@@ -216,10 +224,22 @@ if(-((m_stick->GetRawAxis(4) - 1)/2 < 0)){
 else{
   Indexer->Set(ControlMode::PercentOutput,0);
 }
+if(-((m_stick->GetRawAxis(3) - 1)/2 < 0)){
+   Intake1->Set(ControlMode::PercentOutput,((m_stick->GetRawAxis(3)+1)/2));
+  Intake2->Set(ControlMode::PercentOutput,((m_stick->GetRawAxis(3)+1)/2));
+
+}
+else{
+  Intake1->Set(ControlMode::PercentOutput,0);
+  Intake2->Set(ControlMode::PercentOutput,0);
+}
 //if((m_stick->GetRawAxis(3)-1)/2 < 0){
 
 //}
 //TurretTest->Set(ControlMode::PercentOutput, m_stick->GetZ()/2);
+
+m_robotDrive.ArcadeDrive(-m_stick2->GetY(), m_stick2->GetZ());
+
 }
 
 
