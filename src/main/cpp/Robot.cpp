@@ -39,7 +39,7 @@ double kP = 0.3325, kI = 0.00075, kD = 0.016, kIz = 0.5, kFF = 0, kMaxOutput = 0
 int state = 0;
 
 
-double leftleadmotorID = 1, rightleadmotorID = 4, leftfollowmotorID = 2 , rightfollowermotorID = 3;
+double leftleadmotorID = 4, rightleadmotorID = 2, leftfollowmotorID = 5 , rightfollowermotorID = 3;
   rev::CANSparkMax m_leftleadmotor{leftleadmotorID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax m_leftfollowermotor{leftfollowmotorID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax m_rightleadmotor{rightleadmotorID, rev::CANSparkMax::MotorType::kBrushless};
@@ -65,14 +65,14 @@ void Robot::RobotInit() {
   Ahorz = 0;
   Avert = 0;
    double tA = 0, tS = 0;
-  TurretTest = new TalonSRX(6);
-  Topfly = new TalonSRX(3);
-  Botfly = new TalonSRX(7);
+  //TurretTest = new TalonSRX(6);
+  //Topfly = new TalonSRX(3);
+  //Botfly = new TalonSRX(7);
 
   Indexer = new VictorSPX(4);
 
   Intake1 = new VictorSPX(1);
-  Intake2 = new VictorSPX(2);
+  //Intake2 = new VictorSPX(2);
 
   m_stick = new Joystick(0);
   m_stick2 = new Joystick(1);
@@ -144,11 +144,11 @@ void Robot::TeleopInit() {
 
 void Robot::TeleopPeriodic() {
 Ahorz = table->GetNumber("tx",0.0);
-double encoder = TurretTest->GetSelectedSensorPosition(0);
-double turn = (encoder/426) * 360; 
+//double encoder = TurretTest->GetSelectedSensorPosition(0);
+//double turn = (encoder/426) * 360; 
 
 
-if (turn + Ahorz > 90 || turn + Ahorz < -90){
+/*f (turn + Ahorz > 90 || turn + Ahorz < -90){
   TurretTest->Set(ControlMode::PercentOutput, 0);
 }
 else if (m_stick->GetRawButton(5) == 1){
@@ -183,10 +183,10 @@ else if (m_stick->GetRawButton(5) == 1){
 }
 else{
   TurretTest->Set(ControlMode::PercentOutput, m_stick->GetZ()/2);
-}
+}*/
 double top = SmartDashboard::GetNumber("top", -1);
 double bottom = SmartDashboard::GetNumber("bottom", 1);
-if(m_stick->GetRawButtonPressed(1) == 1){
+/*if(m_stick->GetRawButtonPressed(1) == 1){
   state = 1;
 }
 else if(m_stick->GetRawButtonPressed(2) == 1){
@@ -202,37 +202,38 @@ if(state == 1){
   Botfly->Set(ControlMode::PercentOutput, -0.2);
 }
 else if(state == 2){
-  Topfly->Set(ControlMode::PercentOutput,-0.3);
-  Botfly->Set(ControlMode::PercentOutput, 0.3);
+  Topfly->Set(ControlMode::PercentOutput,0.3);
+  Botfly->Set(ControlMode::PercentOutput, -0.3);
 }
 else if(state == 3){
-  Topfly->Set(ControlMode::PercentOutput,-0.5);
-  Botfly->Set(ControlMode::PercentOutput,0.5);
+  Topfly->Set(ControlMode::PercentOutput,0.5);
+  Botfly->Set(ControlMode::PercentOutput,-0.5);
   state = 3;
 }
 else if(state == 4){
-  Topfly->Set(ControlMode::PercentOutput,-top);
-  Botfly->Set(ControlMode::PercentOutput,bottom);
+  Topfly->Set(ControlMode::PercentOutput,top);
+  Botfly->Set(ControlMode::PercentOutput,-bottom);
 }
 else{
    Topfly->Set(ControlMode::PercentOutput,0);
   Botfly->Set(ControlMode::PercentOutput, 0);
-}
-if(-((m_stick->GetRawAxis(4) - 1)/2 < 0)){
+}*/
+/*if(-((m_stick->GetRawAxis(4) - 1)/2 < 0)){
   Indexer->Set(ControlMode::PercentOutput,((m_stick->GetRawAxis(4)+1)/2));
 }
 else{
   Indexer->Set(ControlMode::PercentOutput,0);
-}
-if(-((m_stick->GetRawAxis(3) - 1)/2 < 0)){
-   Intake1->Set(ControlMode::PercentOutput,((m_stick->GetRawAxis(3)+1)/2));
-  Intake2->Set(ControlMode::PercentOutput,((m_stick->GetRawAxis(3)+1)/2));
+}*/
+//if(-(m_stick->GetRawAxis(3) - 1)/2 < 0)){
+   //xIntake1->Set(ControlMode::PercentOutput,-((m_stick->GetRawAxis(3)+1)/2));
+   //Intake1->Set(ControlMode::PercentOutput, -((m_stick->GetRawAxis(3)+1) / 2));
+  //Intake2->Set(ControlMode::PercentOutput,((m_stick->GetRawAxis(3)+1)/2));
 
-}
-else{
-  Intake1->Set(ControlMode::PercentOutput,0);
-  Intake2->Set(ControlMode::PercentOutput,0);
-}
+//}
+//else{
+  //Intake1->Set(ControlMode::PercentOutput,0);
+  //Intake2->Set(ControlMode::PercentOutput,0);
+//}
 //if((m_stick->GetRawAxis(3)-1)/2 < 0){
 
 //}
