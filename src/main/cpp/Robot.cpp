@@ -39,11 +39,12 @@ double kP = 0.3325, kI = 0.00075, kD = 0.016, kIz = 0.5, kFF = 0, kMaxOutput = 0
 int state = 0, top = 0, bottom = 0;
 
 
-double leftleadmotorID = 3, rightleadmotorID = 1, leftfollowmotorID = 4 , rightfollowermotorID = 2;
+double leftleadmotorID = 3, rightleadmotorID = 1, leftfollowmotorID = 4 , rightfollowermotorID = 2, SparkBotFlyID = 9;
   rev::CANSparkMax m_leftleadmotor{leftleadmotorID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax m_leftfollowermotor{leftfollowmotorID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax m_rightleadmotor{rightleadmotorID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax m_rightfollowermotor{rightfollowermotorID, rev::CANSparkMax::MotorType::kBrushless};
+  rev::CANSparkMax SparkBotFly{SparkBotFlyID, rev::CANSparkMax::MotorType::kBrushless};
 
   frc::Joystick *m_stick;
   frc::Joystick *m_stick2;
@@ -228,23 +229,28 @@ else if(m_stick->GetRawButtonPressed(4) == 1){
 if(state == 1){
   Topfly->Set(ControlMode::PercentOutput, 0);
   Botfly->Set(ControlMode::PercentOutput, 0);
+  SparkBotFly.set(0)
 }
 else if(state == 2){
   Topfly->Set(ControlMode::PercentOutput,0.3);
   Botfly->Set(ControlMode::PercentOutput, -0.3);
+  SparkBotFly.set(-0.3)
 }
 else if(state == 3){
   Topfly->Set(ControlMode::PercentOutput,0.5);
   Botfly->Set(ControlMode::PercentOutput,-0.5);
+  SparkBotFly.set(-0.5)
   state = 3;
 }
 else if(state == 4){
   Topfly->Set(ControlMode::PercentOutput,top);
   Botfly->Set(ControlMode::PercentOutput,-bottom);
+  SparkBotFly.set(-bottom)
 }
 else{
    Topfly->Set(ControlMode::PercentOutput,0);
   Botfly->Set(ControlMode::PercentOutput, 0);
+  SparkBotFly.set(0)
 }
 
   Indexer->Set(ControlMode::PercentOutput,((m_stick->GetRawAxis(4)+1)/2));
