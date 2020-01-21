@@ -36,68 +36,35 @@ using namespace frc;
 
 double speedv = 0.0, wristpos = 0.0, errorv = 0.0, interv = 0.0, derav = 0.0, preverrorv = 0.0;
 double kP = 0.3325, kI = 0.00075, kD = 0.016, kIz = 0.5, kFF = 0, kMaxOutput = 0.25, kMinOutput = -0.25, kMaxOutputL = 0.25, kMinOutputL = -0.25; 
-int state = 0, top = 0, bottom = 0;
 
 
-double leftleadmotorID = 3, rightleadmotorID = 1, leftfollowmotorID = 4 , rightfollowermotorID = 2;
+/*double leftleadmotorID = 1, rightleadmotorID = 4, leftfollowmotorID = 2 , rightfollowermotorID = 3, elevid = 1;
   rev::CANSparkMax m_leftleadmotor{leftleadmotorID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax m_leftfollowermotor{leftfollowmotorID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax m_rightleadmotor{rightleadmotorID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax m_rightfollowermotor{rightfollowermotorID, rev::CANSparkMax::MotorType::kBrushless};
+  rev::CANSparkMax m_elevmotor{elevid, rev::CANSparkMax::MotorType::kBrushless};
+*/
+frc::Joystick *m_stick;
 
-  frc::Joystick *m_stick;
-  frc::Joystick *m_stick2;
-
-  TalonSRX *TurretTest;
-  TalonSRX *Topfly;
-  TalonSRX *Botfly;
-  VictorSPX *Indexer;
-  VictorSPX *Intake1;
-  VictorSPX *Intake2;
-  //DifferentialDrive m_robotDrive{m_leftleadmotor, m_rightleadmotor};
 std::shared_ptr<NetworkTable> table;
 
-
-frc::DifferentialDrive m_robotDrive{m_leftleadmotor, m_rightleadmotor};
-frc::DifferentialDrive m_robotDrive2{m_leftfollowermotor,m_rightfollowermotor};
-
 void Robot::RobotInit() {
-  //m_chooser.SetDefaultOption(kAutoNameDefault, kAutoNameDefault);
-  //m_chooser.AddOption(kAutoNameCustom, kAutoNameCustom);
-  //frc::SmartDashboard::PutData("Auto Modes", &m_chooser);
-
- // m_leftfollowermotor.Follow(m_leftleadmotor);
-  //m_rightfollowermotor.Follow(m_rightleadmotor);
-
-  Ahorz = 0;
-  Avert = 0;
-   double tA = 0, tS = 0;
-  TurretTest = new TalonSRX(6);
+  m_chooser.SetDefaultOption(kAutoNameDefault, kAutoNameDefault);
+  m_chooser.AddOption(kAutoNameCustom, kAutoNameCustom);
+  frc::SmartDashboard::PutData("Auto Modes", &m_chooser);
+  Ahorz = 0, Avert = 0, tA = 0, tS = 0;
+  //TurretTest = new TalonSRX(6);
   Topfly = new TalonSRX(3);
   Botfly = new TalonSRX(7);
-
   Indexer = new VictorSPX(4);
 
-  Intake1 = new VictorSPX(1);
-  Intake2 = new VictorSPX(2);
-
   m_stick = new Joystick(0);
-  m_stick2 = new Joystick(1);
 
 
 SmartDashboard::PutNumber("horizontal", 0);
 SmartDashboard::PutNumber("nums", 0);
-SmartDashboard::PutNumber("top", top);
-SmartDashboard::PutNumber("bottom", bottom);
-SmartDashboard::PutNumber("P", kP);
-SmartDashboard::PutNumber("I", kI);
-SmartDashboard::PutNumber("D", kD); 
-SmartDashboard::PutNumber("*Speed", kMaxOutput); 
-
-
-
-//m_rightfollowermotor.Follow(m_rightleadmotor);
-//m_leftfollowermotor.Follow(m_rightleadmotor);
+  
 }
 
 /**
@@ -142,35 +109,25 @@ void Robot::AutonomousPeriodic() {
   }
 }
 
-  bool LlCntrl = false;
 void Robot::TeleopInit() {
-  table = nt::NetworkTableInstance::GetDefault().GetTable("limelight");
+  /*table = nt::NetworkTableInstance::GetDefault().GetTable("limelight");
   Ahorz = table->GetNumber("tx",0.0);
   Avert = table->GetNumber("ty",0.0);
   double tA = table->GetNumber("ta",0.0);
   double tS = table->GetNumber("ts",0.0);
-  table->PutNumber("pipeline", 3);
+  table->PutNumber("pipeline", 3);*/
  //m_leftfollowermotor.Follow(m_leftleadmotor);
  //m_rightfollowermotor.Follow(m_rightleadmotor);
 }
 
-
 void Robot::TeleopPeriodic() {
-//m_robotDrive.ArcadeDrive(-m_stick->GetY(), m_stick->GetZ());
-Ahorz = table->GetNumber("tx",0.0);
-double encoder = TurretTest->GetSelectedSensorPosition(0);
-double turn = (encoder/426) * 360; 
+//Ahorz = table->GetNumber("tx",0.0);
 
-kP = SmartDashboard::GetNumber("P", kP);
-kI = SmartDashboard::GetNumber("I", kI);
-kD = SmartDashboard::GetNumber("D", kD); 
-double speed = SmartDashboard::GetNumber("*Speed", kMaxOutput); 
-
-if (turn + Ahorz > 180 || turn + Ahorz < -90){
-  TurretTest->Set(ControlMode::PercentOutput, 0);
-}
-else if (m_stick->GetRawButton(5) == 1){
-   
+/*if(m_stick->GetRawButton(5) == 1){ 
+    double rot = (((Ahorz / 180)*14.125) * M_PI);
+    double r1 = rot/3;
+    double t1 = r1/(2 * M_PI);
+    double rf1 = (t1 * 8.68);
 
     double rotation = (Ahorz/360) * 426;
 
@@ -192,108 +149,40 @@ else if (m_stick->GetRawButton(5) == 1){
         preverrorv =  errorv;
         speedv = (kP * errorv) + (kI * interv) + (kD * derav);
         
-        double wspeed = speed * speedv;
+        double wspeed = speedv;
         TurretTest->Set(ControlMode::PercentOutput, wspeed);
 
 }
-//else{
-//if(LlCntrl == false && m_stick2->GetRawButtonPressed(2) == 1){
-//  LlCntrl = true;
-//}
-//else if(LlCntrl == true && m_stick2->GetRawButtonPressed(2) == 1){
-//  LlCntrl = false;
-//}
-
-//if(LlCntrl == true){
-//  TurretTest->Set(ControlMode::PercentOutput, Ahorz *0.1);
-//}
 else{
-
-  TurretTest->Set(ControlMode::PercentOutput, m_stick2->GetZ()/2);
-}
-  //}
-double top = SmartDashboard::GetNumber("top", -1);
-double bottom = SmartDashboard::GetNumber("bottom", 1);
+  TurretTest->Set(ControlMode::PercentOutput, 0);
+}*/
 if(m_stick->GetRawButtonPressed(1) == 1){
-  state = 1;
+  Topfly->Set(ControlMode::PercentOutput,0.1);
+  Botfly->Set(ControlMode::PercentOutput, 0.1);
 }
-else if(m_stick->GetRawButtonPressed(2) == 1){
-  state = 2;
+if(m_stick->GetRawButtonPressed(2) == 1){
+  Topfly->Set(ControlMode::PercentOutput,0.2);
+  Botfly->Set(ControlMode::PercentOutput, 0.2);
 }
-else if(m_stick->GetRawButtonPressed(3) == 1){
-  state = 3;
-}
-else if(m_stick->GetRawButtonPressed(4) == 1){
-  state = 4;}
-if(state == 1){
-  Topfly->Set(ControlMode::PercentOutput, 0);
-  Botfly->Set(ControlMode::PercentOutput, 0);
-}
-else if(state == 2){
-  Topfly->Set(ControlMode::PercentOutput,0.3);
-  Botfly->Set(ControlMode::PercentOutput, -0.3);
-}
-else if(state == 3){
+if(m_stick->GetRawButtonPressed(3) == 1){
   Topfly->Set(ControlMode::PercentOutput,0.5);
-  Botfly->Set(ControlMode::PercentOutput,-0.5);
-  state = 3;
+  Botfly->Set(ControlMode::PercentOutput, 0.5);
 }
-else if(state == 4){
-  Topfly->Set(ControlMode::PercentOutput,top);
-  Botfly->Set(ControlMode::PercentOutput,-bottom);
+if(m_stick->GetRawButtonPressed(4) == 1){
+  Topfly->Set(ControlMode::PercentOutput,0.6);
+  Botfly->Set(ControlMode::PercentOutput, 0.4);
 }
 else{
    Topfly->Set(ControlMode::PercentOutput,0);
   Botfly->Set(ControlMode::PercentOutput, 0);
 }
-
-  Indexer->Set(ControlMode::PercentOutput,((m_stick->GetRawAxis(4)+1)/2));
-
-if((m_stick2->GetRawAxis(4)+1 > 0)){
-   Intake1->Set(ControlMode::PercentOutput,((m_stick2->GetRawAxis(4)+1)/2));
-  
-  Intake2->Set(ControlMode::PercentOutput,((m_stick2->GetRawAxis(4)+1)/2));
+if(-((m_stick->GetRawAxis(4) - 1)/2 > 0)){
+  Indexer->Set(ControlMode::PercentOutput, -((m_stick->GetRawAxis(4)-1)/2));
 }
-else if((m_stick2->GetRawAxis(3)+1) > 0){
-  Intake1->Set(ControlMode::PercentOutput,(-(m_stick2->GetRawAxis(3)+1)/2));
-   
-  Intake2->Set(ControlMode::PercentOutput,(-(m_stick2->GetRawAxis(3)+1)/2));
+else{
+  Indexer->Set(ControlMode::PercentOutput,0);
 }
-else {
-  Intake1->Set(ControlMode::PercentOutput,0);
-  
-  Intake2->Set(ControlMode::PercentOutput,0);
 }
-//if((m_stick->GetRawAxis(3)-1)/2 < 0){
-
-//}
-//TurretTest->Set(ControlMode::PercentOutput, m_stick->GetZ()/2);
-
-/*if((abs(m_stick->GetRawAxis(1) > 0.1)||abs(m_stick->GetRawAxis(2)) > 0.1)){
-m_rightleadmotor.Set(m_stick->GetRawAxis(1));
-m_rightfollowermotor.Set(m_stick->GetRawAxis(1));
-
-m_leftfollowermotor.Set(-m_stick->GetRawAxis(1));
-m_leftleadmotor.Set(-m_stick->GetRawAxis(1));
-}
-else if(abs(m_stick->GetRawAxis(2) > 0.1)){
-m_rightleadmotor.Set(m_stick->GetRawAxis(2));
-m_rightfollowermotor.Set(m_stick->GetRawAxis(2));
-
-m_leftfollowermotor.Set(m_stick->GetRawAxis(2));
-m_leftleadmotor.Set(m_stick->GetRawAxis(2));
-}
-else {
-  m_rightleadmotor.Set(0);
-m_rightfollowermotor.Set(0);
-
-m_leftfollowermotor.Set(0);
-m_leftleadmotor.Set(0);
-}*/
-m_robotDrive.ArcadeDrive(-m_stick->GetY(), m_stick->GetZ()*0.5);
-m_robotDrive2.ArcadeDrive(-m_stick->GetY(), m_stick->GetZ()*0.5);
-}
-
 
 void Robot::TestPeriodic() {}
 
