@@ -36,7 +36,7 @@ using namespace frc;
 
 double speedv = 0.0, wristpos = 0.0, errorv = 0.0, interv = 0.0, derav = 0.0, preverrorv = 0.0;
 double kP = 0.3325, kI = 0.00075, kD = 0.016, kIz = 0.5, kFF = 0, kMaxOutput = 0.25, kMinOutput = -0.25, kMaxOutputL = 0.25, kMinOutputL = -0.25; 
-int state = 0;
+int state = 0, top = 0, bottom = 0;
 
 
 double leftleadmotorID = 3, rightleadmotorID = 1, leftfollowmotorID = 4 , rightfollowermotorID = 2;
@@ -87,8 +87,8 @@ void Robot::RobotInit() {
 
 SmartDashboard::PutNumber("horizontal", 0);
 SmartDashboard::PutNumber("nums", 0);
-SmartDashboard::PutNumber("top", 1);
-SmartDashboard::PutNumber("bottom",1);
+SmartDashboard::PutNumber("top", top);
+SmartDashboard::PutNumber("bottom", bottom);
 SmartDashboard::PutNumber("P", kP);
 SmartDashboard::PutNumber("I", kI);
 SmartDashboard::PutNumber("D", kD); 
@@ -142,6 +142,7 @@ void Robot::AutonomousPeriodic() {
   }
 }
 
+  bool LlCntrl = false;
 void Robot::TeleopInit() {
   table = nt::NetworkTableInstance::GetDefault().GetTable("limelight");
   Ahorz = table->GetNumber("tx",0.0);
@@ -195,9 +196,22 @@ else if (m_stick->GetRawButton(5) == 1){
         TurretTest->Set(ControlMode::PercentOutput, wspeed);
 
 }
+//else{
+//if(LlCntrl == false && m_stick2->GetRawButtonPressed(2) == 1){
+//  LlCntrl = true;
+//}
+//else if(LlCntrl == true && m_stick2->GetRawButtonPressed(2) == 1){
+//  LlCntrl = false;
+//}
+
+//if(LlCntrl == true){
+//  TurretTest->Set(ControlMode::PercentOutput, Ahorz *0.1);
+//}
 else{
+
   TurretTest->Set(ControlMode::PercentOutput, m_stick2->GetZ()/2);
 }
+  //}
 double top = SmartDashboard::GetNumber("top", -1);
 double bottom = SmartDashboard::GetNumber("bottom", 1);
 if(m_stick->GetRawButtonPressed(1) == 1){
@@ -276,8 +290,8 @@ m_rightfollowermotor.Set(0);
 m_leftfollowermotor.Set(0);
 m_leftleadmotor.Set(0);
 }*/
-m_robotDrive.ArcadeDrive(-m_stick->GetY(), m_stick->GetZ());
-m_robotDrive2.ArcadeDrive(-m_stick->GetY(), m_stick->GetZ());
+m_robotDrive.ArcadeDrive(-m_stick->GetY(), m_stick->GetZ()*0.5);
+m_robotDrive2.ArcadeDrive(-m_stick->GetY(), m_stick->GetZ()*0.5);
 }
 
 
