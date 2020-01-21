@@ -229,28 +229,28 @@ else if(m_stick->GetRawButtonPressed(4) == 1){
 if(state == 1){
   Topfly->Set(ControlMode::PercentOutput, 0);
   Botfly->Set(ControlMode::PercentOutput, 0);
-  SparkBotFly.set(0)
+  SparkBotFly.Set(0);
 }
 else if(state == 2){
   Topfly->Set(ControlMode::PercentOutput,0.3);
   Botfly->Set(ControlMode::PercentOutput, -0.3);
-  SparkBotFly.set(-0.3)
+  SparkBotFly.Set(-0.3);
 }
 else if(state == 3){
   Topfly->Set(ControlMode::PercentOutput,0.5);
   Botfly->Set(ControlMode::PercentOutput,-0.5);
-  SparkBotFly.set(-0.5)
+  SparkBotFly.Set(-0.5);
   state = 3;
 }
 else if(state == 4){
   Topfly->Set(ControlMode::PercentOutput,top);
   Botfly->Set(ControlMode::PercentOutput,-bottom);
-  SparkBotFly.set(-bottom)
+  SparkBotFly.Set(-bottom);
 }
 else{
    Topfly->Set(ControlMode::PercentOutput,0);
   Botfly->Set(ControlMode::PercentOutput, 0);
-  SparkBotFly.set(0)
+  SparkBotFly.Set(0);
 }
 
   Indexer->Set(ControlMode::PercentOutput,((m_stick->GetRawAxis(4)+1)/2));
@@ -303,15 +303,4 @@ void Robot::TestPeriodic() {}
 #ifndef RUNNING_FRC_TESTS
 int main() { return frc::StartRobot<Robot>(); }
 #endif
-© 2020 GitHub, Inc.
-Terms
-Privacy
-Security
-Status
-Help
-Contact GitHub
-Pricing
-API
-Training
-Blog
-About
+
