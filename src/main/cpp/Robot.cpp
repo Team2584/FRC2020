@@ -73,6 +73,7 @@ void Robot::RobotInit() {
   Ahorz = 0;
   Avert = 0;
    double tA = 0, tS = 0;
+  VertL = 0;
   TurretTest = new TalonSRX(6);
   Topfly = new TalonSRX(3);
   Botfly = new TalonSRX(7);
@@ -94,6 +95,7 @@ SmartDashboard::PutNumber("P", kP);
 SmartDashboard::PutNumber("I", kI);
 SmartDashboard::PutNumber("D", kD); 
 SmartDashboard::PutNumber("*Speed", kMaxOutput); 
+SmartDashboard::PutNumber("VertL", VertL);
 
 
 
@@ -150,7 +152,9 @@ void Robot::TeleopInit() {
   Avert = table->GetNumber("ty",0.0);
   double tA = table->GetNumber("ta",0.0);
   double tS = table->GetNumber("ts",0.0);
+  VertL = table->GetNumber("tvert", 0.0);
   table->PutNumber("pipeline", 3);
+
  //m_leftfollowermotor.Follow(m_leftleadmotor);
  //m_rightfollowermotor.Follow(m_rightleadmotor);
 }
@@ -159,6 +163,7 @@ void Robot::TeleopInit() {
 void Robot::TeleopPeriodic() {
 //m_robotDrive.ArcadeDrive(-m_stick->GetY(), m_stick->GetZ());
 Ahorz = table->GetNumber("tx",0.0);
+VertL = table->GetNumber("tvert", 0.0);
 double encoder = TurretTest->GetSelectedSensorPosition(0);
 double turn = (encoder/426) * 360; 
 
@@ -166,6 +171,8 @@ kP = SmartDashboard::GetNumber("P", kP);
 kI = SmartDashboard::GetNumber("I", kI);
 kD = SmartDashboard::GetNumber("D", kD); 
 double speed = SmartDashboard::GetNumber("*Speed", kMaxOutput); 
+
+SmartDashboard::PutNumber("VertL", VertL);
 
 if (turn + Ahorz > 180 || turn + Ahorz < -90){
   TurretTest->Set(ControlMode::PercentOutput, 0);
