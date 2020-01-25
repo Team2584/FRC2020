@@ -37,6 +37,7 @@ class Robot : public frc::TimedRobot {
   double Ahorz, tA, tS;
   double Avert;
   double VertL;
+  int statea;
 
   TalonSRX *TurretTest;
   TalonSRX *Topfly;
