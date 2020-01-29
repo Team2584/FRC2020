@@ -58,7 +58,10 @@ double leftleadmotorID = 3, rightleadmotorID = 1, leftfollowmotorID = 4 , rightf
   VictorSPX *Intake1;
   VictorSPX *Intake2;
   Servo *Turn;
-  //DifferentialDrive m_robotDrive{m_leftleadmotor, m_rightleadmotor};
+  TalonSRX *Color;
+  VictorSPX *Lift;
+  int statel;
+  
 std::shared_ptr<NetworkTable> table;
 
  rev::CANEncoder m_encoder = m_rightleadmotor.GetEncoder();
@@ -66,14 +69,14 @@ std::shared_ptr<NetworkTable> table;
 
 frc::DifferentialDrive m_robotDrive{m_leftleadmotor, m_rightleadmotor};
 frc::DifferentialDrive m_robotDrive2{m_leftfollowermotor,m_rightfollowermotor};
+double Ahorz, Avert, VertL, statea;
 
 void Robot::RobotInit() {
   //m_chooser.SetDefaultOption(kAutoNameDefault, kAutoNameDefault);
   //m_chooser.AddOption(kAutoNameCustom, kAutoNameCustom);
   //frc::SmartDashboard::PutData("Auto Modes", &m_chooser);
 
- // m_leftfollowermotor.Follow(m_leftleadmotor);
-  //m_rightfollowermotor.Follow(m_rightleadmotor);
+ \
 
   Ahorz = 0;
   Avert = 0;
@@ -81,19 +84,21 @@ void Robot::RobotInit() {
   VertL = 0;
   statea = 0;
   TurretTest = new TalonSRX(6);
-  //Topfly = new TalonSRX(3);
-  //Botfly = new TalonSRX(7);
+  
 
   Indexer = new VictorSPX(4);
 
   Intake1 = new VictorSPX(1);
   Intake2 = new VictorSPX(2);
 
+  Lift = new VictorSPX(3);
+  Color = new TalonSRX(11);
+
   Turn = new Servo(0);
 
   m_stick = new Joystick(0);
   m_stick2 = new Joystick(1);
-
+  statel = 0;
 
 SmartDashboard::PutNumber("horizontal", 0);
 SmartDashboard::PutNumber("nums", 0);
@@ -107,18 +112,9 @@ SmartDashboard::PutNumber("VertL", VertL);
 SmartDashboard::PutNumber("Servo angle", 0);
 SmartDashboard::PutNumber("LimeLight Difference", 0.0);
 
-//m_rightfollowermotor.Follow(m_rightleadmotor);
-//m_leftfollowermotor.Follow(m_rightleadmotor);
 }
 
-/**
- * This function is called every robot packet, no matter the mode. Use
- * this for items like diagnostics that you want ran during disabled,
- * autonomous, teleoperated and test.
- *
- * <p> This runs after the mode specific periodic functions, but before
- * LiveWindow and SmartDashboard integrated updating.
- */
+
 void Robot::RobotPeriodic() {}
 
 /**
@@ -166,14 +162,11 @@ void Robot::TeleopInit() {
   VertL = table->GetNumber("tvert", 0.0);
   table->PutNumber("pipeline", 3);
   statea = 0;
-
- //m_leftfollowermotor.Follow(m_leftleadmotor);
- //m_rightfollowermotor.Follow(m_rightleadmotor);
 }
 
 
 void Robot::TeleopPeriodic() {
-if(m_stick2->GetRawButtonPressed(1) == 1){
+/*if(m_stick2->GetRawButtonPressed(1) == 1){
   statea = 1;
 }
 double angle = Turn->Get();
@@ -184,7 +177,7 @@ dI = SmartDashboard::GetNumber("I", dI);
 dD = SmartDashboard::GetNumber("D", dD); 
 double dmax = SmartDashboard::GetNumber("*Speed", dmax); 
 
- /*double encode = m_encoder.GetPosition();
+ double encode = m_encoder.GetPosition();
   if((statea = 1)){
     double far = (2 / (0.5 * M_PI));
     double rf1 = (far * 8.68);
@@ -213,7 +206,23 @@ double dmax = SmartDashboard::GetNumber("*Speed", dmax);
 
 }
 */
-
+/*
+       d8888 d8b               d8b                   
+      d88888 Y8P               Y8P                   
+     d88P888                                         
+    d88P 888 888 88888b.d88b.  888 88888b.   .d88b.  
+   d88P  888 888 888 "888 "88b 888 888 "88b d88P"88b 
+  d88P   888 888 888  888  888 888 888  888 888  888 
+ d8888888888 888 888  888  888 888 888  888 Y88b 888 
+d88P     888 888 888  888  888 888 888  888  "Y88888 
+                                                 888 
+                                            Y8b d88P 
+                                             "Y88P" 
+*/
+/*
+This is autimatic Aiming, later this will have a function that calculates what speeds the flywheel should be spinning at and what offset of the limelight should be,
+but for now it is just horizontal aiming
+*/
 Ahorz = table->GetNumber("tx",0.0);
 VertL = table->GetNumber("tvert", 0.0);
 double encoder = TurretTest->GetSelectedSensorPosition(0);
@@ -225,7 +234,7 @@ turn += difference;
 if (turn + Ahorz > 180 || turn + Ahorz < -90){
   TurretTest->Set(ControlMode::PercentOutput, 0);
 }
-else if (m_stick->GetRawButton(5) == 1){
+else if (m_stick2->GetRawButton(1) == 1){
    
 
     double rotation = ((Ahorz + difference) /360) * 426;
@@ -252,69 +261,93 @@ else if (m_stick->GetRawButton(5) == 1){
         TurretTest->Set(ControlMode::PercentOutput, wspeed);
 
 }
-
-//else{
-//if(LlCntrl == false && m_stick2->GetRawButtonPressed(2) == 1){
-//  LlCntrl = true;
-//}
-//else if(LlCntrl == true && m_stick2->GetRawButtonPressed(2) == 1){
-//  LlCntrl = false;
-//}
-
-//if(LlCntrl == true){
-//  TurretTest->Set(ControlMode::PercentOutput, Ahorz *0.1);
-//}
 else{
 
   TurretTest->Set(ControlMode::PercentOutput, m_stick2->GetZ()/2);
 }
-  //}
+/*
+888b     d888       .d8888b.  888                        888    d8b                   
+8888b   d8888      d88P  Y88b 888                        888    Y8P                   
+88888b.d88888      Y88b.      888                        888                          
+888Y88888P888       "Y888b.   88888b.   .d88b.   .d88b.  888888 888 88888b.   .d88b.  
+888 Y888P 888          "Y88b. 888 "88b d88""88b d88""88b 888    888 888 "88b d88P"88b 
+888  Y8P  888            "888 888  888 888  888 888  888 888    888 888  888 888  888 
+888   "   888      Y88b  d88P 888  888 Y88..88P Y88..88P Y88b.  888 888  888 Y88b 888 
+888       888       "Y8888P"  888  888  "Y88P"   "Y88P"   "Y888 888 888  888  "Y88888 
+                                                                                  888 
+                                                                             Y8b d88P 
+                                                                              "Y88P"
+*/
+/*
+Currently this is just to set the flywheel to different speeds for testing, later this will have a change of modes betweeen moving the speed up a down for shooting and a winch
+or three preset modes for close, the line and the trench shooting
+*/
 double top = SmartDashboard::GetNumber("top", -1);
 double bottom = SmartDashboard::GetNumber("bottom", 1);
-if(m_stick->GetRawButtonPressed(1) == 1){
+
+if(m_stick2->GetRawButtonPressed(2) == 1){
   state = 1;
 }
-else if(m_stick->GetRawButtonPressed(2) == 1){
-  state = 2;
-}
-else if(m_stick->GetRawButtonPressed(3) == 1){
+else if(m_stick2->GetRawButtonPressed(3) == 1){
   state = 3;
 }
-else if(m_stick->GetRawButtonPressed(4) == 1){
+else if(m_stick2->GetRawButtonPressed(4) == 1){
   state = 4;}
 if(state == 1){
   SparkTopFly.Set(0);
   SparkBotFly.Set(0);
 }
-else if(state == 2){
-  SparkTopFly.Set(0.3);
-  SparkBotFly.Set(-0.3);
-}
 else if(state == 3){
-  SparkTopFly.Set(0.5);
-  SparkBotFly.Set(-0.5);
+  SparkTopFly.Set(-0.5);
+  SparkBotFly.Set(0.5);
   state = 3;
 }
 else if(state == 4){
-  SparkTopFly.Set(top);
-  SparkBotFly.Set(-bottom);
+  SparkTopFly.Set(-top);
+  SparkBotFly.Set(bottom);
 }
 else{
    SparkTopFly.Set(0);
   SparkBotFly.Set(0);
 }
+/*
+8888888               888                                    
+  888                 888                                    
+  888                 888                                    
+  888   88888b.   .d88888  .d88b.  888  888  .d88b.  888d888 
+  888   888 "88b d88" 888 d8P  Y8b `Y8bd8P' d8P  Y8b 888P"   
+  888   888  888 888  888 88888888   X88K   88888888 888     
+  888   888  888 Y88b 888 Y8b.     .d8""8b. Y8b.     888     
+8888888 888  888  "Y88888  "Y8888  888  888  "Y8888  888 
+*/
+/*
+This runs the indexer up a down for loading and shooting balls, in later versions it will not move unless the flywheels are at acceptable speed
+*/
+  Indexer->Set(ControlMode::PercentOutput,((m_stick2->GetRawAxis(4)+1)/2));
+  Indexer->Set(ControlMode::PercentOutput,-((m_stick2->GetRawAxis(3)+1)/2));
 
-  Indexer->Set(ControlMode::PercentOutput,((m_stick->GetRawAxis(4)+1)/2));
-
+/*
+8888888          888             888               
+  888            888             888               
+  888            888             888               
+  888   88888b.  888888  8888b.  888  888  .d88b.  
+  888   888 "88b 888        "88b 888 .88P d8P  Y8b 
+  888   888  888 888    .d888888 888888K  88888888 
+  888   888  888 Y88b.  888  888 888 "88b Y8b.     
+8888888 888  888  "Y888 "Y888888 888  888  "Y8888  
+*/
+/*
+This is the function for the intake
+*/
 if((m_stick2->GetRawAxis(4)+1 > 0)){
-   Intake1->Set(ControlMode::PercentOutput,((m_stick2->GetRawAxis(4)+1)/2));
+   Intake1->Set(ControlMode::PercentOutput,((m_stick->GetRawAxis(4)+1)/2));
   
-  Intake2->Set(ControlMode::PercentOutput,(-(m_stick2->GetRawAxis(4)+1)/2));
+  Intake2->Set(ControlMode::PercentOutput,(-(m_stick->GetRawAxis(4)+1)/2));
 }
 else if((m_stick2->GetRawAxis(3)+1) > 0){
-  Intake1->Set(ControlMode::PercentOutput,(-(m_stick2->GetRawAxis(3)+1)/2));
+  Intake1->Set(ControlMode::PercentOutput,(-(m_stick->GetRawAxis(3)+1)/2));
    
-  Intake2->Set(ControlMode::PercentOutput,((m_stick2->GetRawAxis(3)+1)/2));
+  Intake2->Set(ControlMode::PercentOutput,((m_stick->GetRawAxis(3)+1)/2));
 }
 else {
   Intake1->Set(ControlMode::PercentOutput,0);
@@ -324,6 +357,47 @@ else {
 
 m_robotDrive.ArcadeDrive(-m_stick->GetY(), m_stick->GetZ()*0.5);
 m_robotDrive2.ArcadeDrive(-m_stick->GetY(), m_stick->GetZ()*0.5);
+
+/*
+ .d8888b.           888                      d88P  .d8888b.                         888          888          
+d88P  Y88b          888                     d88P  d88P  Y88b                        888          888          
+888    888          888                    d88P   888    888                        888          888          
+888         .d88b.  888  .d88b.  888d888  d88P    888         .d88b.  88888b.   .d88888  .d88b.  888  8888b.  
+888        d88""88b 888 d88""88b 888P"   d88P     888  88888 d88""88b 888 "88b d88" 888 d88""88b 888     "88b 
+888    888 888  888 888 888  888 888    d88P      888    888 888  888 888  888 888  888 888  888 888 .d888888 
+Y88b  d88P Y88..88P 888 Y88..88P 888   d88P       Y88b  d88P Y88..88P 888  888 Y88b 888 Y88..88P 888 888  888 
+ "Y8888P"   "Y88P"  888  "Y88P"  888  d88P         "Y8888P88  "Y88P"  888  888  "Y88888  "Y88P"  888 "Y888888
+*/
+/*
+Pretty simple, this is the movement controls for the color wheel spinner and the Gondola movement controlled by the same function
+*/
+Color->Set(ControlMode::PercentOutput, m_stick2->GetX()/2);
+//also the gondola
+
+/*
+ .d8888b.  888 d8b               888      
+d88P  Y88b 888 Y8P               888      
+888    888 888                   888      
+888        888 888 88888b.d88b.  88888b.  
+888        888 888 888 "888 "88b 888 "88b 
+888    888 888 888 888  888  888 888  888 
+Y88b  d88P 888 888 888  888  888 888 d88P 
+ "Y8888P"  888 888 888  888  888 88888P"  
+*/
+/*
+This is driver function for the climb
+*/
+if(m_stick->GetRawButton(3) == 1){
+ Lift->Set(ControlMode::PercentOutput, 1);
+}
+else if(m_stick->GetRawButton(4) == 1){
+  Lift->Set(ControlMode::PercentOutput, -1); 
+}
+else{
+  Lift->Set(ControlMode::PercentOutput, 0);
+}
+
+
 }
 
 

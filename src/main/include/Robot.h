@@ -34,14 +34,16 @@ class Robot : public frc::TimedRobot {
   const std::string kAutoNameCustom = "My Auto";
   std::string m_autoSelected;
 
-  double Ahorz, tA, tS;
-  double Avert;
-  double VertL;
-  int statea;
+  frc::Joystick *m_stick;
+  frc::Joystick *m_stick2;
 
   TalonSRX *TurretTest;
-  TalonSRX *Topfly;
-  TalonSRX *Botfly;
   VictorSPX *Indexer;
+  VictorSPX *Intake1;
+  VictorSPX *Intake2;
+  Servo *Turn;
+  TalonSRX *Color;
+  VictorSPX *Lift;
+  int statel;
 
 };
