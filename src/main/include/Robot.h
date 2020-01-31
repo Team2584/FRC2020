@@ -41,7 +41,7 @@ class Robot : public frc::TimedRobot {
   VictorSPX *Indexer;
   VictorSPX *Intake1;
   VictorSPX *Intake2;
-  Servo *Turn;
+  //Servo *Turn;
   TalonSRX *Color;
   VictorSPX *Lift;
   int statel;

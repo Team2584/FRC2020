@@ -58,6 +58,7 @@ double leftleadmotorID = 3, rightleadmotorID = 1, leftfollowmotorID = 4 , rightf
   VictorSPX *Intake1;
   VictorSPX *Intake2;
   Servo *Turn;
+  Servo *Wheel;
   TalonSRX *Color;
   VictorSPX *Lift;
   int statel;
@@ -69,7 +70,8 @@ std::shared_ptr<NetworkTable> table;
 
 frc::DifferentialDrive m_robotDrive{m_leftleadmotor, m_rightleadmotor};
 frc::DifferentialDrive m_robotDrive2{m_leftfollowermotor,m_rightfollowermotor};
-double Ahorz, Avert, VertL, statea;
+double Ahorz, Avert, VertL,Servo1;
+int statea, stateS, speedF, ServoS, ServoS2;
 
 void Robot::RobotInit() {
   //m_chooser.SetDefaultOption(kAutoNameDefault, kAutoNameDefault);
@@ -83,6 +85,8 @@ void Robot::RobotInit() {
    double tA = 0, tS = 0;
   VertL = 0;
   statea = 0;
+  stateS = 0;
+
   TurretTest = new TalonSRX(6);
   
 
@@ -94,7 +98,8 @@ void Robot::RobotInit() {
   Lift = new VictorSPX(3);
   Color = new TalonSRX(11);
 
-  Turn = new Servo(0);
+  Turn = new Servo(1);
+  Wheel = new Servo(0);
 
   m_stick = new Joystick(0);
   m_stick2 = new Joystick(1);
@@ -162,6 +167,11 @@ void Robot::TeleopInit() {
   VertL = table->GetNumber("tvert", 0.0);
   table->PutNumber("pipeline", 3);
   statea = 0;
+  stateS = 0;
+  speedF = 0;
+  ServoS = 0;
+
+  ServoS2 = 0;
 }
 
 
@@ -284,7 +294,13 @@ or three preset modes for close, the line and the trench shooting
 */
 double top = SmartDashboard::GetNumber("top", -1);
 double bottom = SmartDashboard::GetNumber("bottom", 1);
-
+if(m_stick2->GetRawButton(5) == 1){
+  stateS = 0;
+}
+if(m_stick2->GetRawButton(6) == 1){
+  stateS = 1;
+}
+if(stateS == 0){
 if(m_stick2->GetRawButtonPressed(2) == 1){
   state = 1;
 }
@@ -310,6 +326,30 @@ else{
    SparkTopFly.Set(0);
   SparkBotFly.Set(0);
 }
+}
+else if(stateS == 1){
+  if(m_stick2->GetRawButton(2) == 1){
+    if((speedF + 0.1) > 1){
+      speedF = speedF;
+    }
+    else{
+      speedF += 0.1;
+    }
+  }
+  else if(m_stick2->GetRawButton(3) == 1){
+    if((speedF - 0.1) < 0){
+      speedF = speedF;
+    }
+    else{
+      speedF -= 0.1;
+    }
+  }
+  else{
+    speedF = speedF;
+  }
+  SparkTopFly.Set(-speedF);
+  SparkBotFly.Set(speedF);
+}
 /*
 8888888               888                                    
   888                 888                                    
@@ -323,8 +363,8 @@ else{
 /*
 This runs the indexer up a down for loading and shooting balls, in later versions it will not move unless the flywheels are at acceptable speed
 */
-  Indexer->Set(ControlMode::PercentOutput,((m_stick2->GetRawAxis(4)+1)/2));
-  Indexer->Set(ControlMode::PercentOutput,-((m_stick2->GetRawAxis(3)+1)/2));
+  Indexer->Set(ControlMode::PercentOutput,-((m_stick2->GetRawAxis(4)+1)/2));
+  Indexer->Set(ControlMode::PercentOutput,((m_stick2->GetRawAxis(3)+1)/2));
 
 /*
 8888888          888             888               
@@ -339,12 +379,12 @@ This runs the indexer up a down for loading and shooting balls, in later version
 /*
 This is the function for the intake
 */
-if((m_stick2->GetRawAxis(4)+1 > 0)){
+if((m_stick->GetRawAxis(4)+1 > 0)){
    Intake1->Set(ControlMode::PercentOutput,((m_stick->GetRawAxis(4)+1)/2));
   
   Intake2->Set(ControlMode::PercentOutput,(-(m_stick->GetRawAxis(4)+1)/2));
 }
-else if((m_stick2->GetRawAxis(3)+1) > 0){
+else if((m_stick->GetRawAxis(3)+1) > 0){
   Intake1->Set(ControlMode::PercentOutput,(-(m_stick->GetRawAxis(3)+1)/2));
    
   Intake2->Set(ControlMode::PercentOutput,((m_stick->GetRawAxis(3)+1)/2));
@@ -397,8 +437,35 @@ else{
   Lift->Set(ControlMode::PercentOutput, 0);
 }
 
+Turn->SetBounds(2.0, 1.8, 1.5, 1.2, 1.0);
 
+if(m_stick->GetRawButton(1) == 1){
+  ServoS = 1;
 }
+if(m_stick->GetRawButton(2) == 1){
+   ServoS = 2;
+ }
+if(ServoS == 1){
+  Wheel->Set(1);
+}
+if(ServoS == 2){
+  Wheel->Set(-0.1);
+}
+if(m_stick->GetRawButton(5) == 1){
+  ServoS2 = 1;
+}
+if(m_stick->GetRawButton(6) == 1){
+  ServoS2 = 2;
+}
+ 
+if(ServoS2 == 1){
+  Turn->Set(0.5);
+}
+if(ServoS2 == 2){
+  Turn->Set(0);
+}
+}
+
 
 
 void Robot::TestPeriodic() {}
