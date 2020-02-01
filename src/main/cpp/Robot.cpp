@@ -36,17 +36,22 @@ using namespace frc;
 
 double speedv = 0.0, wristpos = 0.0, errorv = 0.0, interv = 0.0, derav = 0.0, preverrorv = 0.0;
 double kP = 0.15, kI = 0, kD = 0,  kMaxOutput = 0.25; 
+double speedw = 0.0, winchpos = 0.0, errorw = 0.0, interw = 0.0, deraw = 0.0, preverrorw = 0.0;
+double wP = 0.15, wI = 0, wD = 0,  wMax = 0.25; 
+double speedd = 0.0, errord = 0.0, interd = 0.0, derad = 0.0, preverrow = 0.0;
 double dP = 0.05, dI = 0.0, dD = 0., dmax = 0.1;
 int state = 0, top = 0, bottom = 0;
+int winchStatrt = 0;
 
 
-double leftleadmotorID = 3, rightleadmotorID = 1, leftfollowmotorID = 4 , rightfollowermotorID = 2, SparkBotFlyID = 9, topFly = 8;
+double leftleadmotorID = 3, rightleadmotorID = 1, leftfollowmotorID = 4 , rightfollowermotorID = 2, SparkBotFlyID = 9, topFly = 8, winchID = 12; 
   rev::CANSparkMax m_leftleadmotor{leftleadmotorID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax m_leftfollowermotor{leftfollowmotorID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax m_rightleadmotor{rightleadmotorID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax m_rightfollowermotor{rightfollowermotorID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax SparkBotFly{SparkBotFlyID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax SparkTopFly{topFly, rev::CANSparkMax::MotorType::kBrushless};
+  rev::CANSparkMax winch{winchID, rev::CANSparkMax::MotorType::kBrushless};
 
   frc::Joystick *m_stick;
   frc::Joystick *m_stick2;
@@ -67,10 +72,11 @@ std::shared_ptr<NetworkTable> table;
 
  rev::CANEncoder m_encoder = m_rightleadmotor.GetEncoder();
  rev::CANEncoder m_encoder2 = m_leftleadmotor.GetEncoder();
+ rev::CANEncoder winchE = winch.GetEncoder();
 
 frc::DifferentialDrive m_robotDrive{m_leftleadmotor, m_rightleadmotor};
 frc::DifferentialDrive m_robotDrive2{m_leftfollowermotor,m_rightfollowermotor};
-double Ahorz, Avert, VertL,Servo1;
+double Ahorz, Avert, VertL,Servo1, Epos;
 int statea, stateS, speedF, ServoS, ServoS2;
 
 void Robot::RobotInit() {
@@ -172,6 +178,10 @@ void Robot::TeleopInit() {
   ServoS = 0;
 
   ServoS2 = 0;
+
+  Epos = 0;
+  
+  winchStatrt = 0;
 }
 
 
@@ -327,7 +337,7 @@ else{
   SparkBotFly.Set(0);
 }
 }
-else if(stateS == 1){
+if(stateS == 1){
   if(m_stick2->GetRawButton(2) == 1){
     if((speedF + 0.1) > 1){
       speedF = speedF;
@@ -411,7 +421,7 @@ Y88b  d88P Y88..88P 888 Y88..88P 888   d88P       Y88b  d88P Y88..88P 888  888 Y
 /*
 Pretty simple, this is the movement controls for the color wheel spinner and the Gondola movement controlled by the same function
 */
-Color->Set(ControlMode::PercentOutput, m_stick2->GetX()/2);
+Color->Set(ControlMode::PercentOutput, m_stick2->GetX());
 //also the gondola
 
 /*
@@ -454,15 +464,58 @@ if(ServoS == 2){
 if(m_stick->GetRawButton(5) == 1){
   ServoS2 = 1;
 }
-if(m_stick->GetRawButton(6) == 1){
-  ServoS2 = 2;
-}
+//if(m_stick->GetRawButton(6) == 1){
+  //ServoS2 = 2;
+//}
  
 if(ServoS2 == 1){
   Turn->Set(0.5);
 }
 if(ServoS2 == 2){
   Turn->Set(0);
+}
+/*
+888       888 d8b                   888      
+888   o   888 Y8P                   888      
+888  d8b  888                       888      
+888 d888b 888 888 88888b.   .d8888b 88888b.  
+888d88888b888 888 888 "88b d88P"    888 "88b 
+88888P Y88888 888 888  888 888      888  888 
+8888P   Y8888 888 888  888 Y88b.    888  888 
+888P     Y888 888 888  888  "Y8888P 888  888 
+*/
+winch.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
+double posi = winchE.GetPosition();
+if(m_stick->GetRawButton(6) == 1){
+  winch.Set(1.0);
+  Epos = winchE.GetPosition();
+  winchStatrt = 1;
+}
+else{
+  /*errorw = Epos - posi;
+        interw = interw + errorw;  
+
+        if(errorw == 0)
+            {
+                interw = 0;
+            }
+        else if ((interw > kP)||(interw < -kP))
+            {
+                interw = 0;
+            }
+        deraw = errorw - preverrorw;
+        preverrorw =  errorw;
+        speedw = (wP * errorw) + (wI * interw) + (wD * deraw);
+        
+        double espeed = wMax * speedw;
+        winch.Set(espeed);*/
+  //if(winchStatrt == 1){
+   // winch.Set(0.2);
+  //}
+  //else{
+    winch.Set(0);
+  //}
+  //winch.s
 }
 }
 
