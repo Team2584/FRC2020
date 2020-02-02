@@ -203,26 +203,26 @@ double dmax = SmartDashboard::GetNumber("*Speed", dmax);
     double rf1 = (far * 8.68);
     
 
-     errorv = rf1 - encode;
-        interv = interv + errorv;  
+     errord = rf1 - encode;
+        interd = interd + errord;  
 
-        if(errorv == 0)
+        if(errord == 0)
             {
-                interv = 0;
+                interd = 0;
             }
-        else if ((interv > dI)||(interv < -dI))
+        else if ((interd > dI)||(interd < -dI))
             {
-                interv = 0;
+                interd = 0;
             }
-        derav = errorv - preverrorv;
-        preverrorv =  errorv;
-        speedv = (dP * errorv) + (dI * interv) + (dD * derav);
+        derad = errord - preverrord;
+        preverrord =  errord;
+        speedd = (dP * errord) + (dI * interd) + (dD * derad);
         
-        double wspeed = speedv;
-        m_rightleadmotor.Set(wspeed * dmax);
-        m_rightfollowermotor.Set(wspeed* dmax);
-        m_leftleadmotor.Set(-wspeed * dmax);
-        m_leftfollowermotor.Set(-wspeed * dmax);
+        double dspeed = speedd;
+        m_rightleadmotor.Set(dspeed * dmax);
+        m_rightfollowermotor.Set(dspeed* dmax);
+        m_leftleadmotor.Set(-dspeed * dmax);
+        m_leftfollowermotor.Set(-dspeed * dmax);
 
 }
 */
@@ -461,18 +461,18 @@ if(ServoS == 1){
 if(ServoS == 2){
   Wheel->Set(-0.1);
 }
-if(m_stick->GetRawButton(5) == 1){
+if(m_stick->GetRawButton(10) == 1){
   ServoS2 = 1;
 }
-//if(m_stick->GetRawButton(6) == 1){
-  //ServoS2 = 2;
-//}
+if(m_stick->GetRawButton(9) == 1){
+  ServoS2 = 2;
+}
  
 if(ServoS2 == 1){
-  Turn->Set(0.5);
+  Turn->SetSpeed(0.5);
 }
 if(ServoS2 == 2){
-  Turn->Set(0);
+  Turn->SetSpeed(0);
 }
 /*
 888       888 d8b                   888      
@@ -484,12 +484,15 @@ if(ServoS2 == 2){
 8888P   Y8888 888 888  888 Y88b.    888  888 
 888P     Y888 888 888  888  "Y8888P 888  888 
 */
+/* Code for the winch, making the winch idle at brake will hopefully not allow it to back drive*/
 winch.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
 double posi = winchE.GetPosition();
 if(m_stick->GetRawButton(6) == 1){
-  winch.Set(1.0);
-  Epos = winchE.GetPosition();
-  winchStatrt = 1;
+  winch.Set(1);
+}
+else if(m_stick->GetRawButton(5) == 1){
+ winch.Set(-0.2);
+ 
 }
 else{
   /*errorw = Epos - posi;
