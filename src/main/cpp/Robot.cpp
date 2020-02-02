@@ -122,6 +122,7 @@ SmartDashboard::PutNumber("*Speed", dmax);
 SmartDashboard::PutNumber("VertL", VertL);
 SmartDashboard::PutNumber("Servo angle", 0);
 SmartDashboard::PutNumber("LimeLight Difference", 0.0);
+SmartDashboard::PutNumber("Intake voltage", 0.0);
 
 }
 
@@ -389,6 +390,9 @@ This runs the indexer up a down for loading and shooting balls, in later version
 /*
 This is the function for the intake
 */
+double intakeVoltage = Intake1->GetMotorOutputVoltage();
+SmartDashboard::PutNumber("Intake voltage", intakeVoltage);
+
 if((m_stick->GetRawAxis(4)+1 > 0)){
    Intake1->Set(ControlMode::PercentOutput,((m_stick->GetRawAxis(4)+1)/2));
   
@@ -495,30 +499,7 @@ else if(m_stick->GetRawButton(5) == 1){
  
 }
 else{
-  /*errorw = Epos - posi;
-        interw = interw + errorw;  
-
-        if(errorw == 0)
-            {
-                interw = 0;
-            }
-        else if ((interw > kP)||(interw < -kP))
-            {
-                interw = 0;
-            }
-        deraw = errorw - preverrorw;
-        preverrorw =  errorw;
-        speedw = (wP * errorw) + (wI * interw) + (wD * deraw);
-        
-        double espeed = wMax * speedw;
-        winch.Set(espeed);*/
-  //if(winchStatrt == 1){
-   // winch.Set(0.2);
-  //}
-  //else{
     winch.Set(0);
-  //}
-  //winch.s
 }
 }
 
