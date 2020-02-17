@@ -79,7 +79,7 @@ std::shared_ptr<NetworkTable> table;
 
 frc::DifferentialDrive m_robotDrive{m_leftleadmotor, m_rightleadmotor};
 frc::DifferentialDrive m_robotDrive2{m_leftfollowermotor,m_rightfollowermotor};
-double Ahorz, Avert, VertL,Servo1, speedF, speeddr, speeddt, Epos, Lpos;
+double Ahorz, HorzL, VertL,Servo1, speedF, speeddr, speeddt, Epos, Lpos;
 int statea, stateS,  ServoS, ServoS2, timer;
 
 static void VisionThread()
@@ -97,7 +97,7 @@ void Robot::RobotInit() {
  
 
   Ahorz = 0;
-  Avert = 0;
+  HorzL = 0;
    double tA = 0, tS = 0;
   VertL = 0;
   statea = 0;
@@ -257,7 +257,7 @@ double dmax = SmartDashboard::GetNumber("*Speed", dmax);
 
 Ahorz = table->GetNumber("tx",0.0);
 VertL = table->GetNumber("tvert", 0.0);
-
+HorzL = table->GetNumber("thor",0.0);
    
 
     double rotation = ((Ahorz + 1) /360) * 426;
@@ -287,7 +287,7 @@ VertL = table->GetNumber("tvert", 0.0);
 void Robot::TeleopInit() {
   table = nt::NetworkTableInstance::GetDefault().GetTable("limelight");
   Ahorz = table->GetNumber("tx",0.0);
-  Avert = table->GetNumber("ty",0.0);
+  HorzL = table->GetNumber("thor",0.0);
   double tA = table->GetNumber("ta",0.0);
   double tS = table->GetNumber("ts",0.0);
   VertL = table->GetNumber("tvert", 0.0);
@@ -439,7 +439,7 @@ else if(m_stick2->GetRawButtonPressed(3) == 1){
 }
 else if(m_stick2->GetRawButtonPressed(4) == 1){
   state = 4;}
-else if (m_stick2->GetRawButtonPressed(13) == 1){
+else if (m_stick2->GetPOV() != -1){
   state = 0;
 }
 if(state == 1){
