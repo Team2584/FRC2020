@@ -67,6 +67,7 @@ double leftleadmotorID = 3, rightleadmotorID = 1, leftfollowmotorID = 4 , rightf
   Servo *Wheel;
   TalonSRX *Color;
   VictorSPX *Lift;
+  VictorSPX *Arm;
   DigitalInput *TopLimit;
   DigitalInput *BottomLimit;
   int statel;
@@ -112,6 +113,7 @@ void Robot::RobotInit() {
   Intake2 = new VictorSPX(2);
 
   Lift = new VictorSPX(3);
+  Arm  = new VictorSPX(5);
   Color = new TalonSRX(11);
 
   Turn = new Servo(1);
@@ -652,29 +654,39 @@ if(ServoS == 2){
   Wheel->Set(-0.1);
 }
 if(m_stick2->GetRawButton(10) == 1){
-   Turn->SetSpeed(0.5);
-   Lpos = Turn->GetAngle();
+   //Turn->SetSpeed(0.5);
+   //Lpos = Turn->GetAngle();
   
-   if(Lpos >= 1){
-  if(TopLimit->Get() == 1){
+   //if(Lpos >= 1){
+  //if(TopLimit->Get() == 1){
     Lift->Set(ControlMode::PercentOutput, -1);
-  }
-  else{
-    Lift->Set(ControlMode::PercentOutput, 0); 
-  }
-   }
+  //}
+  //else{
+    //Lift->Set(ControlMode::PercentOutput, 0); 
+  //}
+   //}
 }
 else if(m_stick2->GetRawButton(9) == 1){
-  if(BottomLimit->Get() == 1){
+  //if(BottomLimit->Get() == 1){
     Lift->Set(ControlMode::PercentOutput, 1); 
-  }
-  else{
-  Lift->Set(ControlMode::PercentOutput, 0);
-  Turn->SetSpeed(0);
-  }
+  //}
+  //else{
+  //Lift->Set(ControlMode::PercentOutput, 0);
+  //Turn->SetSpeed(0);
+  //}
 }
 else{
   Lift->Set(ControlMode::PercentOutput, 0); 
+}
+
+if(m_stick2->GetRawButton(13) == 1){
+  Arm->Set(ControlMode::PercentOutput, -1);
+}
+else if(m_stick2->GetRawButton(14) == 1){
+  Arm->Set(ControlMode::PercentOutput, -0.2);
+}
+else {
+  Arm->Set(ControlMode::PercentOutput, 0);
 }
 SmartDashboard::PutNumber("Toplimit", TopLimit->Get());
 SmartDashboard::PutNumber("bottomlimit",BottomLimit->Get());
