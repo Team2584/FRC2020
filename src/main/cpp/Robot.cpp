@@ -70,6 +70,9 @@ double leftleadmotorID = 3, rightleadmotorID = 1, leftfollowmotorID = 4 , rightf
   VictorSPX *Arm;
   DigitalInput *TopLimit;
   DigitalInput *BottomLimit;
+
+  PigeonIMU *Chasis;
+  PigeonIMU *Turret;
   int statel;
   
 std::shared_ptr<NetworkTable> table;
@@ -83,12 +86,7 @@ frc::DifferentialDrive m_robotDrive2{m_leftfollowermotor,m_rightfollowermotor};
 double Ahorz, HorzL, VertL,Servo1, speedF, speeddr, speeddt, Epos, Lpos;
 int statea, stateS,  ServoS, ServoS2, timer;
 
-static void VisionThread()
-    {
-        cs::UsbCamera camera = CameraServer::GetInstance()->StartAutomaticCapture();
-        camera.SetResolution(272, 204);
-        camera.SetFPS(22);
-    }
+
 
 void Robot::RobotInit() {
   //m_chooser.SetDefaultOption(kAutoNameDefault, kAutoNameDefault);
@@ -124,9 +122,20 @@ void Robot::RobotInit() {
 
   TopLimit = new DigitalInput(0);
   BottomLimit = new DigitalInput(1);
+
+  Chasis = new PigeonIMU(1);
+  Turret = new PigeonIMU(0);
+
   statel = 0;
   timer = 0;
   Lpos = 0;
+
+  cs::UsbCamera camera = CameraServer::GetInstance()->StartAutomaticCapture();
+        camera.SetResolution(200, 150);
+        camera.SetFPS(22);
+  cs::UsbCamera camera1 = CameraServer::GetInstance()->StartAutomaticCapture(1);
+        camera1.SetResolution(200, 150);
+        camera1.SetFPS(22);
 
 SmartDashboard::PutNumber("horizontal", 0);
 SmartDashboard::PutNumber("nums", 0);
@@ -143,7 +152,8 @@ SmartDashboard::PutNumber("Intake voltage", 0.0);
 SmartDashboard::PutNumber("Toplimit", 0.0);
 SmartDashboard::PutNumber("bottomlimit", 0.0);
 SmartDashboard::PutNumber("servo", 0.0);
-SmartDashboard::PutNumber("Am I a fool", 0.0);
+SmartDashboard::PutNumber("Chasis", 0.0);
+SmartDashboard::PutNumber("Turremt", 0.0);
 }
 
 
@@ -170,6 +180,8 @@ void Robot::AutonomousInit() {
   Autostate = 0;
   shot = 0;
   Atimer = 50;
+  Chasis->SetCompassAngle(0);
+  Turret->SetCompassAngle(0);
   //if (m_autoSelected == kAutoNameCustom) {
     // Custom Auto goes here
   //} //else {
@@ -227,7 +239,7 @@ dD = SmartDashboard::GetNumber("D", dD);
 double dmax = SmartDashboard::GetNumber("*Speed", dmax); 
 
  double encode = m_encoder.GetPosition();
- SmartDashboard::PutNumber("nums", encode);
+
   
     double far = ( -5 / (0.5 * M_PI));
     double rf1 = (far * 8.68);
@@ -308,6 +320,8 @@ void Robot::TeleopInit() {
   
   winchStatrt = 0;
   
+  Chasis->SetFusedHeading(0);
+  Turret->SetFusedHeading(0);
   
   }
 
@@ -373,16 +387,22 @@ but for now it is just horizontal aiming
 */
 Ahorz = table->GetNumber("tx",0.0);
 VertL = table->GetNumber("tvert", 0.0);
-double encoder = TurretTest->GetSelectedSensorPosition(0);
-double turn = (encoder/426) * 360; 
+double turretEncode = Turret->GetFusedHeading();
+double chasisEncode = Chasis->GetFusedHeading();
+SmartDashboard::PutNumber("Chasis", chasisEncode);
+SmartDashboard::PutNumber("Turremt", turretEncode);
+
+double turn = turretEncode + chasisEncode;
+
+ SmartDashboard::PutNumber("nums", -m_stick2->GetZ()/2);
 
 double difference = SmartDashboard::GetNumber("LimeLight Difference", 0.0);
 SmartDashboard::PutNumber("VertL", VertL);
-turn += difference;
-if (turn + Ahorz > 160 || turn + Ahorz < -90){
+if (m_stick2->GetRawButton(1) == 1){
+if (turn + Ahorz > 90 || turn + Ahorz < -180){
   TurretTest->Set(ControlMode::PercentOutput, 0);
 }
-else if (m_stick2->GetRawButton(1) == 1){
+else{
    
 
     double rotation = ((Ahorz + difference) /360) * 426;
@@ -409,9 +429,21 @@ else if (m_stick2->GetRawButton(1) == 1){
         TurretTest->Set(ControlMode::PercentOutput, wspeed);
 
 }
-else{
+}
 
-  TurretTest->Set(ControlMode::PercentOutput, m_stick2->GetZ()/2);
+else{
+if(turn > 80 && (-m_stick2->GetZ() < 0)){
+  TurretTest->Set(ControlMode::PercentOutput, -abs(m_stick2->GetZ()/2));
+}
+else if(turn < -170 && (-m_stick2->GetZ() > 0)){
+  TurretTest->Set(ControlMode::PercentOutput, abs(m_stick2->GetZ()/2));
+}
+else if(turn < -180 || turn > 90){
+  TurretTest->Set(ControlMode::PercentOutput, 0);
+}
+else{
+  TurretTest->Set(ControlMode::PercentOutput, -m_stick2->GetZ()/2);
+}
 }
 /*
 888b     d888       .d8888b.  888                        888    d8b                   
@@ -651,7 +683,7 @@ if(ServoS == 1){
   Wheel->Set(1);
 }
 if(ServoS == 2){
-  Wheel->Set(-0.1);
+  Wheel->Set(0.35);
 }
 if(m_stick2->GetRawButton(10) == 1){
    //Turn->SetSpeed(0.5);
@@ -679,11 +711,11 @@ else{
   Lift->Set(ControlMode::PercentOutput, 0); 
 }
 
-if(m_stick2->GetRawButton(13) == 1){
+if(m_stick2->GetRawButton(14) == 1){
   Arm->Set(ControlMode::PercentOutput, -1);
 }
-else if(m_stick2->GetRawButton(14) == 1){
-  Arm->Set(ControlMode::PercentOutput, -0.2);
+else if(m_stick2->GetRawButton(13) == 1){
+  Arm->Set(ControlMode::PercentOutput, 0.2);
 }
 else {
   Arm->Set(ControlMode::PercentOutput, 0);
