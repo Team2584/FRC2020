@@ -42,8 +42,9 @@ double wP = 0.15, wI = 0, wD = 0,  wMax = 0.25;
 double speedd = 0.0, errord = 0.0, interd = 0.0, derad = 0.0, preverrod = 0.0;
 double dP = 0.1, dI = 0.0, dD = 0.0005, dmax = 0.1;
 int state = 0, top = 0, bottom = 0;
-int winchStatrt = 0;
+int winchStatrt = 0, digest = 0;
 int Autostate = 0, shot = 0, Atimer = 0, shotstate = 0, shotTimer = 0;
+double difference;
 
 
 double leftleadmotorID = 3, rightleadmotorID = 1, leftfollowmotorID = 4 , rightfollowermotorID = 2, SparkBotFlyID = 9, topFly = 8, winchID = 12; 
@@ -70,7 +71,8 @@ double leftleadmotorID = 3, rightleadmotorID = 1, leftfollowmotorID = 4 , rightf
   VictorSPX *Lift;
   VictorSPX *Arm;
   DigitalInput *TopLimit;
-  DigitalInput *BottomLimit;
+  AnalogInput *light;
+  
 
   PigeonIMU *Chasis;
   PigeonIMU *Turret;
@@ -86,7 +88,7 @@ frc::DifferentialDrive m_robotDrive{m_leftleadmotor, m_rightleadmotor};
 frc::DifferentialDrive m_robotDrive2{m_leftfollowermotor,m_rightfollowermotor};
 double Ahorz, HorzL, VertL,Servo1, speedF, speeddr, speeddt, Epos, Lpos, Autonpos;
 int statea, stateS,  ServoS, ServoS2, timer;
-int Autonslect;
+int Autonslect, start;
 
 
 
@@ -95,7 +97,7 @@ void Robot::RobotInit() {
   //m_chooser.AddOption(kAutoNameCustom, kAutoNameCustom);
   //frc::SmartDashboard::PutData("Auto Modes", &m_chooser);
 
- 
+ table = nt::NetworkTableInstance::GetDefault().GetTable("limelight");
 
   Ahorz = 0;
   HorzL = 0;
@@ -123,15 +125,19 @@ void Robot::RobotInit() {
   m_stick2 = new Joystick(1);
 
   TopLimit = new DigitalInput(0);
-  BottomLimit = new DigitalInput(1);
+  light = new AnalogInput(2);
 
   Chasis = new PigeonIMU(1);
   Turret = new PigeonIMU(0);
+
 
   statel = 0;
   timer = 0;
   Lpos = 0;
   Autonpos = 0.0;
+  start = 0;
+  difference = 0.0;
+  Autostate = 0;
 
   cs::UsbCamera camera = CameraServer::GetInstance()->StartAutomaticCapture();
         camera.SetResolution(200, 150);
@@ -150,19 +156,16 @@ SmartDashboard::PutNumber("D", dD);
 SmartDashboard::PutNumber("*Speed", dmax); 
 SmartDashboard::PutNumber("VertL", VertL);
 SmartDashboard::PutNumber("Servo angle", 0);
-SmartDashboard::PutNumber("LimeLight Difference", 0.0);
 SmartDashboard::PutNumber("Intake voltage", 0.0);
 SmartDashboard::PutNumber("Toplimit", 0.0);
-SmartDashboard::PutNumber("bottomlimit", 0.0);
 SmartDashboard::PutNumber("servo", 0.0);
 SmartDashboard::PutNumber("Chasis", 0.0);
-SmartDashboard::PutNumber("Turremt", 0.0);
+SmartDashboard::PutNumber("Turret", 0.0);
 SmartDashboard::PutString("ColorWheel", "No Color");
 SmartDashboard::PutNumber("Auton Select", 0);
-
-Chasis->SetFusedHeadingToCompass();
-
-Turret->SetFusedHeadingToCompass();
+SmartDashboard::PutNumber("start config", 0);
+Chasis->SetFusedHeading(0);
+Turret->SetFusedHeading(0);
 
 
 }
@@ -170,17 +173,6 @@ Turret->SetFusedHeadingToCompass();
 
 void Robot::RobotPeriodic() {}
 
-/**
- * This autonomous (along with the chooser code above) shows how to select
- * between different autonomous modes using the dashboard. The sendable chooser
- * code works with the Java SmartDashboard. If you prefer the LabVIEW Dashboard,
- * remove all of the chooser code and uncomment the GetString line to get the
- * auto name from the text box below the Gyro.
- *
- * You can add additional auto modes by adding additional comparisons to the
- * if-else structure below with additional strings. If using the SendableChooser
- * make sure to add them to the chooser code above as well.
- */
 void Robot::AutonomousInit() {
   m_autoSelected = m_chooser.GetSelected();
   table = nt::NetworkTableInstance::GetDefault().GetTable("limelight");
@@ -192,21 +184,31 @@ void Robot::AutonomousInit() {
   Autostate = 0;
   shot = 0;
   Atimer = 50;
+  
 
 Autonslect = SmartDashboard::GetNumber("Auton Select", 0);
-  
+start = SmartDashboard::GetNumber("start config", 0);
+Chasis->SetFusedHeading(0);
+Turret->SetFusedHeading(0);
+
+
+table->PutNumber("pipline", 0);
+table->PutNumber("ledMode", 3);
   //if (m_autoSelected == kAutoNameCustom) {
     // Custom Auto goes here
   //} //else {
     // Default Auto goes here
   //}
+  
 }
 
 void Robot::AutonomousPeriodic() {
 double turretEncode = Turret->GetFusedHeading();
 double chasisEncode = Chasis->GetFusedHeading();
 SmartDashboard::PutNumber("Chasis", chasisEncode);
-SmartDashboard::PutNumber("Turremt", turretEncode);
+SmartDashboard::PutNumber("Turret", turretEncode);
+Wheel->Set(0.35);
+Autonslect = SmartDashboard::GetNumber("Auton Select", 0);
 /*
        d8888          888                           d888   
       d88888          888                          d8888   
@@ -217,13 +219,31 @@ SmartDashboard::PutNumber("Turremt", turretEncode);
  d8888888888 Y88b 888 Y88b. Y88..88P 888  888        888   
 d88P     888  "Y88888  "Y888 "Y88P"  888  888      8888888
 */
-if(Autonslect == 0){  
-if (Autostate == 0){
+if(Autonslect == 0){ 
+  if(Autostate == 0){
+    if(Atimer == 0){
+      Autostate = 1;
+      Atimer = 100;
+    }
+    else{
+      table->PutNumber("pipline", 0);
+      table->PutNumber("ledMode", 3);
+       SparkTopFly.Set(-0.5);
+   SparkBotFly.Set(0.5);
+   Intake1->Set(ControlMode::PercentOutput, 0.1);
+   Intake2->Set(ControlMode::PercentOutput, -0.1);
+   Indexer->Set(ControlMode::PercentOutput, 0);
+   Atimer -= 1;
+    }
+  } 
+else if (Autostate == 1){
  if(Atimer == 0){
-   Autostate = 1;
+   Autostate = 2;
    Atimer = 100;
  }
  else{
+   table->PutNumber("pipline", 0);
+   table->PutNumber("ledMode", 3);
    SparkTopFly.Set(-0.5);
    SparkBotFly.Set(0.5);
    Intake1->Set(ControlMode::PercentOutput, 0.1);
@@ -235,7 +255,7 @@ VertL = table->GetNumber("tvert", 0.0);
 HorzL = table->GetNumber("thor",0.0);
    
 
-    double rotation = ((Ahorz + 1) /360) * 426;
+    double rotation = (Ahorz/360) * 426;
 
      errorv = rotation;
         interv = interv + errorv;  
@@ -256,11 +276,11 @@ HorzL = table->GetNumber("thor",0.0);
         TurretTest->Set(ControlMode::PercentOutput, -wspeed);
 }
  }
-else if(Autostate == 1){
+else if(Autostate == 2){
   if(Atimer == 0){
     shot += 1;
     if(shot == 1){
-      Autostate = 2;
+      Autostate = 3;
     }
     else{
     Autostate = 0;
@@ -268,6 +288,8 @@ else if(Autostate == 1){
     }
   }
   else{
+     table->PutNumber("pipline", 0);
+    table->PutNumber("ledMode", 3);
     SparkTopFly.Set(-0.5);
    SparkBotFly.Set(0.5);
    Intake1->Set(ControlMode::PercentOutput, 1);
@@ -297,28 +319,29 @@ HorzL = table->GetNumber("thor",0.0);
         speedv = (kP * errorv) + (kI * interv) + (kD * derav);
         
         double wspeed = kMaxOutput * speedv;
-        TurretTest->Set(ControlMode::PercentOutput, -wspeed);
+        TurretTest->Set(ControlMode::PercentOutput, 0);
 }
   }
 
-else{
+else if(Autostate == 3){
    SparkTopFly.Set(0);
    SparkBotFly.Set(0);
-   Intake1->Set(ControlMode::PercentOutput, 1);
-   Intake2->Set(ControlMode::PercentOutput, -1);
-   Indexer->Set(ControlMode::PercentOutput, 1);
+   Intake1->Set(ControlMode::PercentOutput, 0.5);
+   Intake2->Set(ControlMode::PercentOutput, -0.5);
+   Indexer->Set(ControlMode::PercentOutput, 0);
    TurretTest->Set(ControlMode::PercentOutput, 0);
+   table->PutNumber("ledMode", 1);
 
   
 dP = SmartDashboard::GetNumber("P", dP);
-dI = SmartDashboard::GetNumber("I", dI);
+dI = SmartDashboard::GetNumber("I", dI); 
 dD = SmartDashboard::GetNumber("D", dD); 
 double dmax = SmartDashboard::GetNumber("*Speed", dmax); 
 
  double encode = m_encoder.GetPosition();
 
   
-    double far = ( -8 / (0.5 * M_PI));
+    double far = ( -5 / (0.5 * M_PI));
     double rf1 = (far * 8.68);
     
 
@@ -345,6 +368,9 @@ double dmax = SmartDashboard::GetNumber("*Speed", dmax);
         m_leftfollowermotor.Set(-dspeed);
  
   }
+else{
+  
+}
 }
 /*
        d8888          888                           .d8888b.  
@@ -448,6 +474,7 @@ else if(Autostate == 2){
    Intake2->Set(ControlMode::PercentOutput, -0.1);
    Indexer->Set(ControlMode::PercentOutput, 0.1);
    TurretTest->Set(ControlMode::PercentOutput, 0);
+   table->PutNumber("ledMode", 1);
 
   
 dP = SmartDashboard::GetNumber("P", dP);
@@ -458,12 +485,12 @@ double dmax = SmartDashboard::GetNumber("*Speed", dmax);
  double encode = m_encoder.GetPosition();
 
   
-    double far = ( 10 / (0.5 * M_PI));
+    double far = (10 / (0.5 * M_PI));
     double rf1 = (far * 8.68);
     
 
      //errord = (1.0345 * rf1) - encode;
-     errord = rf1 - encode;
+     errord = rf1 - encode + difference;
         interd = interd + errord;  
 
         if(errord == 0)
@@ -485,6 +512,7 @@ double dmax = SmartDashboard::GetNumber("*Speed", dmax);
         m_leftfollowermotor.Set(-dspeed);
       if (rf1 - 7 <= encode && rf1 + 7 >= encode && dspeed < 0.2){
         Autostate = 3;
+        difference = encode;
       }
       else{
         Autostate = 2;
@@ -505,6 +533,7 @@ dD = SmartDashboard::GetNumber("D", dD);
 double dmax = SmartDashboard::GetNumber("*Speed", dmax); 
 
  double encode = Chasis->GetFusedHeading();
+ double encoded = m_encoder.GetPosition();
   
 
     
@@ -525,13 +554,14 @@ double dmax = SmartDashboard::GetNumber("*Speed", dmax);
         preverrod =  errord;
         speedd = (dP * errord) + (dI * interd) + (dD * derad);
         
-        double dspeed = speedd *dmax;
+        double dspeed = speedd *dmax/3;
         m_rightleadmotor.Set(dspeed);
         m_rightfollowermotor.Set(dspeed);
         m_leftleadmotor.Set(dspeed);
         m_leftfollowermotor.Set(dspeed);
         if(encode <= -110 + 5 && encode >= -110 - 5 && dspeed <= 0.1){
           Autostate = 4;
+          difference = encoded;
         }
         else{
           Autostate = 3;
@@ -560,7 +590,7 @@ double dmax = SmartDashboard::GetNumber("*Speed", dmax);
     
 
      //errord = (1.0345 * rf1) - encode;
-     errord = rf1 - encode;
+     errord = rf1 - encode + difference;
         interd = interd + errord;  
 
         if(errord == 0)
@@ -582,6 +612,7 @@ double dmax = SmartDashboard::GetNumber("*Speed", dmax);
         m_leftfollowermotor.Set(-dspeed);
         if (rf1 - 7 <= encode && rf1 + 7 >= encode && dspeed < 0.2){
         Autostate = 5;
+        difference = encode;
       }
       else{
         Autostate = 4;
@@ -590,9 +621,9 @@ double dmax = SmartDashboard::GetNumber("*Speed", dmax);
 else if(Autostate == 5){
    SparkTopFly.Set(0);
    SparkBotFly.Set(0);
-   Intake1->Set(ControlMode::PercentOutput, 0.1);
-   Intake2->Set(ControlMode::PercentOutput, -0.1);
-   Indexer->Set(ControlMode::PercentOutput, 0.1);
+   Intake1->Set(ControlMode::PercentOutput, 0.5);
+   Intake2->Set(ControlMode::PercentOutput, -0.5);
+   Indexer->Set(ControlMode::PercentOutput, 0);
    TurretTest->Set(ControlMode::PercentOutput, 0);
 
   
@@ -605,6 +636,216 @@ double dmax = SmartDashboard::GetNumber("*Speed", dmax);
 
   
     double far = ( 2 / (0.5 * M_PI));
+    double rf1 = (far * 8.68);
+    
+
+     //errord = (1.0345 * rf1) - encode;
+     errord = rf1 - encode + difference;
+        interd = interd + errord;  
+
+        if(errord == 0)
+            {
+                interd = 0;
+            }
+        else if ((interd > dI)||(interd < -dI))
+            {
+                interd = 0;
+            }
+        derad = errord - preverrod;
+        preverrod =  errord;
+        speedd = (dP * errord) + (dI * interd) + (dD * derad);
+        
+        double dspeed = speedd *dmax;
+        m_rightleadmotor.Set(dspeed);
+        m_rightfollowermotor.Set(dspeed);
+        m_leftleadmotor.Set(-dspeed);
+        m_leftfollowermotor.Set(-dspeed);
+        if (rf1 - 7 <= encode && rf1 + 7 >= encode && dspeed < 0.2){
+        Autostate = 6;
+        difference = encode;
+      }
+      else{
+        Autostate = 5;
+      }
+}
+else if(Autostate == 6){
+     SparkTopFly.Set(0);
+   SparkBotFly.Set(0);
+   Intake1->Set(ControlMode::PercentOutput, 0.1);
+   Intake2->Set(ControlMode::PercentOutput, -0.1);
+   Indexer->Set(ControlMode::PercentOutput, 0.1);
+   TurretTest->Set(ControlMode::PercentOutput, 0);
+
+  
+dP = SmartDashboard::GetNumber("P", dP);
+dI = SmartDashboard::GetNumber("I", dI);
+dD = SmartDashboard::GetNumber("D", dD); 
+double dmax = SmartDashboard::GetNumber("*Speed", dmax); 
+
+ double encode = Chasis->GetFusedHeading();
+ double encoded = m_encoder.GetPosition();
+  
+
+    
+
+     //errord = (1.0345 * rf1) - encode;
+     errord = 110 - encode;
+        interd = interd + errord;  
+
+        if(errord == 0)
+            {
+                interd = 0;
+            }
+        else if ((interd > dI)||(interd < -dI))
+            {
+                interd = 0;
+            }
+        derad = errord - preverrod;
+        preverrod =  errord;
+        speedd = (dP * errord) + (dI * interd) + (dD * derad);
+        
+        double dspeed = speedd *dmax/3;
+        m_rightleadmotor.Set(dspeed);
+        m_rightfollowermotor.Set(dspeed);
+        m_leftleadmotor.Set(dspeed);
+        m_leftfollowermotor.Set(dspeed);
+      
+     
+}
+}
+/*
+       d8888          888                           .d8888b.  
+      d88888          888                          d88P  Y88b 
+     d88P888          888                               .d88P 
+    d88P 888 888  888 888888 .d88b.  88888b.           8888"  
+   d88P  888 888  888 888   d88""88b 888 "88b           "Y8b. 
+  d88P   888 888  888 888   888  888 888  888      888    888 
+ d8888888888 Y88b 888 Y88b. Y88..88P 888  888      Y88b  d88P 
+d88P     888  "Y88888  "Y888 "Y88P"  888  888       "Y8888P" 
+*/
+else if(Autonslect == 2){
+  if(Autostate == 0){
+    if(Atimer == 0){
+      Autostate = 1;
+      Atimer = 100;
+    }
+    else{
+      table->PutNumber("pipline", 0);
+      table->PutNumber("ledMode", 3);
+       SparkTopFly.Set(-0.5);
+   SparkBotFly.Set(0.5);
+   Intake1->Set(ControlMode::PercentOutput, 0.1);
+   Intake2->Set(ControlMode::PercentOutput, -0.1);
+   Indexer->Set(ControlMode::PercentOutput, 0);
+   Atimer -= 1;
+    }
+  } 
+else if (Autostate == 1){
+ if(Atimer == 0){
+   Autostate = 2;
+   Atimer = 100;
+ }
+ else{
+    table->PutNumber("pipline", 0);
+    table->PutNumber("ledMode", 3);
+   SparkTopFly.Set(-0.5);
+   SparkBotFly.Set(0.5);
+   Intake1->Set(ControlMode::PercentOutput, 0.1);
+   Intake2->Set(ControlMode::PercentOutput, -0.1);
+   Indexer->Set(ControlMode::PercentOutput, 0);
+   Atimer -= 1;
+   Ahorz = table->GetNumber("tx",0.0);
+VertL = table->GetNumber("tvert", 0.0);
+HorzL = table->GetNumber("thor",0.0);
+   
+
+    double rotation = (Ahorz/360) * 426;
+
+     errorv = rotation;
+        interv = interv + errorv;  
+
+        if(errorv == 0)
+            {
+                interv = 0;
+            }
+        else if ((interv > kP)||(interv < -kP))
+            {
+                interv = 0;
+            }
+        derav = errorv - preverrorv;
+        preverrorv =  errorv;
+        speedv = (kP * errorv) + (kI * interv) + (kD * derav);
+        
+        double wspeed = kMaxOutput * speedv;
+        TurretTest->Set(ControlMode::PercentOutput, -wspeed);
+}
+ }
+else if(Autostate == 2){
+  if(Atimer == 0){
+    shot += 1;
+    if(shot == 1){
+      Autostate = 3;
+    }
+    else{
+    Autostate = 0;
+    Atimer = 125;
+    }
+  }
+  else{
+     table->PutNumber("pipline", 0);
+     table->PutNumber("ledMode", 3);
+    SparkTopFly.Set(-0.5);
+   SparkBotFly.Set(0.5);
+   Intake1->Set(ControlMode::PercentOutput, 1);
+   Intake2->Set(ControlMode::PercentOutput, -1);
+   Indexer->Set(ControlMode::PercentOutput, 1);
+   Atimer -= 1;
+   Ahorz = table->GetNumber("tx",0.0);
+VertL = table->GetNumber("tvert", 0.0);
+HorzL = table->GetNumber("thor",0.0);
+   
+
+    /*double rotation = ((Ahorz + 1) /360) * 426;
+
+     errorv = rotation;
+        interv = interv + errorv;  
+
+        if(errorv == 0)
+            {
+                interv = 0;
+            }
+        else if ((interv > kP)||(interv < -kP))
+            {
+                interv = 0;
+            }
+        derav = errorv - preverrorv;
+        preverrorv =  errorv;
+        speedv = (kP * errorv) + (kI * interv) + (kD * derav);
+        
+        double wspeed = kMaxOutput * speedv;*/
+        TurretTest->Set(ControlMode::PercentOutput, 0);
+}
+  }
+
+else if(Autostate == 3){
+   SparkTopFly.Set(0);
+   SparkBotFly.Set(0);
+   Intake1->Set(ControlMode::PercentOutput, 0.5);
+   Intake2->Set(ControlMode::PercentOutput, -0.5);
+   Indexer->Set(ControlMode::PercentOutput, 0);
+   TurretTest->Set(ControlMode::PercentOutput, 0);
+   table->PutNumber("ledMode", 1);
+
+  
+dP = SmartDashboard::GetNumber("P", dP);
+dI = SmartDashboard::GetNumber("I", dI); 
+dD = SmartDashboard::GetNumber("D", dD); 
+double dmax = SmartDashboard::GetNumber("*Speed", dmax); 
+
+ double encode = m_encoder.GetPosition();
+
+  
+    double far = (5 / (0.5 * M_PI));
     double rf1 = (far * 8.68);
     
 
@@ -629,34 +870,44 @@ double dmax = SmartDashboard::GetNumber("*Speed", dmax);
         m_rightfollowermotor.Set(dspeed);
         m_leftleadmotor.Set(-dspeed);
         m_leftfollowermotor.Set(-dspeed);
-        if (rf1 - 7 <= encode && rf1 + 7 >= encode && dspeed < 0.2){
-        Autostate = 6;
+      if (rf1 - 7 <= encode && rf1 + 7 >= encode && abs(dspeed) < 0.2){
+        Autostate = 4;
+        difference = encode; 
       }
       else{
-        Autostate = 5;
+        Autostate = 3;
       }
-}
-else if(Autostate == 6){
-     SparkTopFly.Set(0);
+  }
+  else if(Autostate == 4){
+   SparkTopFly.Set(0);
    SparkBotFly.Set(0);
-   Intake1->Set(ControlMode::PercentOutput, 0.1);
+   Intake1->Set(ControlMode::PercentOutput, 0.6);
    Intake2->Set(ControlMode::PercentOutput, -0.1);
    Indexer->Set(ControlMode::PercentOutput, 0.1);
    TurretTest->Set(ControlMode::PercentOutput, 0);
 
   
-dP = SmartDashboard::GetNumber("P", dP);
-dI = SmartDashboard::GetNumber("I", dI);
+   dP = SmartDashboard::GetNumber("P", dP);
+   dI = SmartDashboard::GetNumber("I", dI);
+   dD = SmartDashboard::GetNumber("D", dD); 
 dD = SmartDashboard::GetNumber("D", dD); 
+   dD = SmartDashboard::GetNumber("D", dD); 
+dD = SmartDashboard::GetNumber("D", dD); 
+   dD = SmartDashboard::GetNumber("D", dD); 
+dD = SmartDashboard::GetNumber("D", dD); 
+   dD = SmartDashboard::GetNumber("D", dD); 
+   double dmax = SmartDashboard::GetNumber("*Speed", dmax); 
 double dmax = SmartDashboard::GetNumber("*Speed", dmax); 
+   double dmax = SmartDashboard::GetNumber("*Speed", dmax); 
+double dmax = SmartDashboard::GetNumber("*Speed", dmax); 
+   double dmax = SmartDashboard::GetNumber("*Speed", dmax); 
+double dmax = SmartDashboard::GetNumber("*Speed", dmax); 
+   double dmax = SmartDashboard::GetNumber("*Speed", dmax); 
 
- double encode = Chasis->GetFusedHeading();
+   double encode = Chasis->GetFusedHeading();
+   double encoded = m_encoder.GetPosition();
   
-
-    
-
-     //errord = (1.0345 * rf1) - encode;
-     errord = 110 - encode;
+    errord = -180 - encode;
         interd = interd + errord;  
 
         if(errord == 0)
@@ -676,127 +927,24 @@ double dmax = SmartDashboard::GetNumber("*Speed", dmax);
         m_rightfollowermotor.Set(dspeed);
         m_leftleadmotor.Set(dspeed);
         m_leftfollowermotor.Set(dspeed);
-        
-}
-}
-/*
-       d8888          888                           .d8888b.  
-      d88888          888                          d88P  Y88b 
-     d88P888          888                               .d88P 
-    d88P 888 888  888 888888 .d88b.  88888b.           8888"  
-   d88P  888 888  888 888   d88""88b 888 "88b           "Y8b. 
-  d88P   888 888  888 888   888  888 888  888      888    888 
- d8888888888 Y88b 888 Y88b. Y88..88P 888  888      Y88b  d88P 
-d88P     888  "Y88888  "Y888 "Y88P"  888  888       "Y8888P" 
-*/
-else if(Autonslect == 2){
-  if (Autostate == 0){
- if(Atimer == 0){
-   Autostate = 1;
-   Atimer = 100;
- }
- else{
-   SparkTopFly.Set(-0.5);
-   SparkBotFly.Set(0.5);
-   Intake1->Set(ControlMode::PercentOutput, 0.1);
-   Intake2->Set(ControlMode::PercentOutput, -0.1);
-   Indexer->Set(ControlMode::PercentOutput, 0);
-   Atimer -= 1;
-   Ahorz = table->GetNumber("tx",0.0);
-VertL = table->GetNumber("tvert", 0.0);
-HorzL = table->GetNumber("thor",0.0);
-   
-
-    double rotation = ((Ahorz + 1) /360) * 426;
-
-     errorv = rotation;
-        interv = interv + errorv;  
-
-        if(errorv == 0)
-            {
-                interv = 0;
-            }
-        else if ((interv > kP)||(interv < -kP))
-            {
-                interv = 0;
-            }
-        derav = errorv - preverrorv;
-        preverrorv =  errorv;
-        speedv = (kP * errorv) + (kI * interv) + (kD * derav);
-        
-        double wspeed = kMaxOutput * speedv;
-        TurretTest->Set(ControlMode::PercentOutput, -wspeed);
-
-}
- }
-else if(Autostate == 1){
-  if(Atimer == 0){
-    shot += 1;
-    if(shot == 1){
-      Autostate = 2;
-    }
-    else{
-    Autostate = 0;
-    Atimer = 125;
-    }
+      if (-180 - 5 >= encode && -180 + 5 <= encode && abs(dspeed) < 0.1){
+        Autostate = 5;
+        difference = encoded; 
+      }
+      else{
+        Autostate = 4;
+      }
   }
-  else{
-    SparkTopFly.Set(-0.5);
-   SparkBotFly.Set(0.5);
-   Intake1->Set(ControlMode::PercentOutput, 1);
-   Intake2->Set(ControlMode::PercentOutput, -1);
-   Indexer->Set(ControlMode::PercentOutput, 1);
-   Atimer -= 1;
-   Ahorz = table->GetNumber("tx",0.0);
-VertL = table->GetNumber("tvert", 0.0);
-HorzL = table->GetNumber("thor",0.0);
-   
-
-    double rotation = ((Ahorz + 1) /360) * 426;
-
-     errorv = rotation;
-        interv = interv + errorv;  
-
-        if(errorv == 0)
-            {
-                interv = 0;
-            }
-        else if ((interv > kP)||(interv < -kP))
-            {
-                interv = 0;
-            }
-        derav = errorv - preverrorv;
-        preverrorv =  errorv;
-        speedv = (kP * errorv) + (kI * interv) + (kD * derav);
-        
-        double wspeed = kMaxOutput * speedv;
-        TurretTest->Set(ControlMode::PercentOutput, -wspeed);
-}
-  }
-
-else if(Autostate == 3){
-   SparkTopFly.Set(0);
-   SparkBotFly.Set(0);
-   Intake1->Set(ControlMode::PercentOutput, 0.1);
-   Intake2->Set(ControlMode::PercentOutput, -0.1);
-   Indexer->Set(ControlMode::PercentOutput, 0.1);
-   TurretTest->Set(ControlMode::PercentOutput, 0);
+  else if(Autostate == 5){
+    double encode = m_encoder.GetPosition();
 
   
-dP = SmartDashboard::GetNumber("P", dP);
-dI = SmartDashboard::GetNumber("I", dI);
-dD = SmartDashboard::GetNumber("D", dD); 
-double dmax = SmartDashboard::GetNumber("*Speed", dmax); 
-
- double encode = m_encoder.GetPosition();
-
-  
-    double far = (-10 / (0.5 * M_PI));
-    double rf1 = (far * 8.68) + Autonpos;
+    double far = (-11.25 / (0.5 * M_PI));
+    double rf1 = (far * 8.68);
     
 
      //errord = (1.0345 * rf1) - encode;
-     errord = rf1 - encode;
+     errord = rf1 - encode + difference;
         interd = interd + errord;  
 
         if(errord == 0)
@@ -809,73 +957,26 @@ double dmax = SmartDashboard::GetNumber("*Speed", dmax);
             }
         derad = errord - preverrod;
         preverrod =  errord;
-        speedd = (dP * errord) + (dI * interd);// + (dD * derad);
+        speedd = (dP * errord) + (dI * interd) + (dD * derad);
         
         double dspeed = speedd *dmax;
         m_rightleadmotor.Set(dspeed);
         m_rightfollowermotor.Set(dspeed);
         m_leftleadmotor.Set(-dspeed);
         m_leftfollowermotor.Set(-dspeed);
-      if (rf1 - 7 <= encode && rf1 + 7 >= encode && dspeed < 0.2){
-        Autostate = 4;
+      if (rf1 + difference - 7 <= encode && rf1 + difference + 7 >= encode && abs(dspeed) < 0.2){
+        Autostate = 6;
+        difference = encode; 
       }
       else{
-        Autostate = 3;
+        Autostate = 5;
       }
+  }
 }
-else if(Autostate == 2){
-     SparkTopFly.Set(0);
-   SparkBotFly.Set(0);
-   Intake1->Set(ControlMode::PercentOutput, 0.1);
-   Intake2->Set(ControlMode::PercentOutput, -0.1);
-   Indexer->Set(ControlMode::PercentOutput, 0.1);
-   TurretTest->Set(ControlMode::PercentOutput, 0);
-
-  
-dP = SmartDashboard::GetNumber("P", dP);
-dI = SmartDashboard::GetNumber("I", dI);
-dD = SmartDashboard::GetNumber("D", dD); 
-double dmax = SmartDashboard::GetNumber("*Speed", dmax); 
-
- double encode = Chasis->GetFusedHeading();
- Autonpos = m_encoder.GetPosition();
-
   
 
-    
 
-     //errord = (1.0345 * rf1) - encode;
-     errord = -180 - encode;
-        interd = interd + errord;  
 
-        if(errord == 0)
-            {
-                interd = 0;
-            }
-        else if ((interd > dI)||(interd < -dI))
-            {
-                interd = 0;
-            }
-        derad = errord - preverrod;
-        preverrod =  errord;
-        speedd = (dP * errord) + (dI * interd) + (dD * derad);
-        
-        double dspeed = speedd *dmax * 0.5;
-        m_rightleadmotor.Set(dspeed);
-        m_rightfollowermotor.Set(dspeed);
-        m_leftleadmotor.Set(dspeed);
-        m_leftfollowermotor.Set(dspeed);
-        if(encode <= -180 + 5 && encode >= -180 - 5 && dspeed <= 0.1){
-          Autostate = 3;
-        }
-        else{
-          Autostate = 2;
-        }
- 
-SmartDashboard::PutNumber("Chasis", encode);
-      
-}
-}
 /*
 888888b.                     d8b          
 888  "88b                    Y8P          
@@ -887,30 +988,7 @@ SmartDashboard::PutNumber("Chasis", encode);
 8888888P"  "Y888888  88888P' 888  "Y8888P 
 */
 else{
-Ahorz = table->GetNumber("tx",0.0);
-VertL = table->GetNumber("tvert", 0.0);
-HorzL = table->GetNumber("thor",0.0);
-   
 
-    double rotation = ((Ahorz + 1) /360) * 426;
-
-     errorv = rotation;
-        interv = interv + errorv;  
-
-        if(errorv == 0)
-            {
-                interv = 0;
-            }
-        else if ((interv > kP)||(interv < -kP))
-            {
-                interv = 0;
-            }
-        derav = errorv - preverrorv;
-        preverrorv =  errorv;
-        speedv = (kP * errorv) + (kI * interv) + (kD * derav);
-        
-        double wspeed = kMaxOutput * speedv;
-        TurretTest->Set(ControlMode::PercentOutput, -wspeed);
 }
 
 }
@@ -938,10 +1016,11 @@ void Robot::TeleopInit() {
   winchStatrt = 0;
   shotstate = 0;
   shotTimer = 0;
-  
-  Chasis->SetFusedHeading(0);
-  Turret->SetFusedHeading(0);
-  
+ table->PutNumber("camMode", 1);
+
+  table->PutNumber("pipline", 0);
+  table->PutNumber("ledMode", 1);
+   winch.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
   }
 
 
@@ -1009,34 +1088,51 @@ VertL = table->GetNumber("tvert", 0.0);
 double turretEncode = Turret->GetFusedHeading();
 double chasisEncode = Chasis->GetFusedHeading();
 SmartDashboard::PutNumber("Chasis", chasisEncode);
-SmartDashboard::PutNumber("Turremt", turretEncode);
+SmartDashboard::PutNumber("Turret", turretEncode);
+if(Ahorz >= 30){
+  Ahorz = 0;
+}
+else{
+  Ahorz = Ahorz;
+}
 
 double turn = turretEncode + chasisEncode;
 
  SmartDashboard::PutNumber("nums", -m_stick2->GetZ()/2);
 
-double difference = SmartDashboard::GetNumber("LimeLight Difference", 0.0);
+
 SmartDashboard::PutNumber("VertL", VertL);
 SmartDashboard::PutNumber("horizontal", Ahorz);
-if(m_stick2->GetRawButton(1) == 1 && shotstate == 0 && shotTimer == 0){
+if(m_stick2->GetRawButton(1) == 1 && shotstate == 0 && shotTimer <= 0)
+{
+  nt::NetworkTableInstance::GetDefault().GetTable("limelight")->PutNumber("ledMode", 3);
   shotstate = 1;
   shotTimer = 50;
+  table->PutNumber("camMode", 0);
+  
 }
-else if(m_stick2->GetRawButton(1) == 1 && shotstate == 1 && shotTimer == 0){
+else if(m_stick2->GetRawButton(1) == 1 && shotstate == 1 && shotTimer <= 0)
+{
+  nt::NetworkTableInstance::GetDefault().GetTable("limelight")->PutNumber("ledMode", 1);
+
   shotstate = 0;
   shotTimer = 50;
+  table->PutNumber("camMode", 1);
 }
-if(shotTimer != 0){
+if(shotTimer >= 0) /*!=0*/
+{
   shotTimer -= 2;
 }
-if (shotstate == 1){
-if (turn - Ahorz > 80 || turn - Ahorz < -170){
-  TurretTest->Set(ControlMode::PercentOutput, 0);
-}
-else{
-   
-
-    double rotation = ((Ahorz + difference) /360) * 426;
+if (shotstate == 1)
+{
+  if (turn - Ahorz > 60 || turn - Ahorz < -90)
+  {
+    TurretTest->Set(ControlMode::PercentOutput, 0);
+  }
+  else
+  {
+  
+    double rotation = (Ahorz  /360) * 426;
 
     SmartDashboard::PutNumber("horizontal", Ahorz);
     
@@ -1075,20 +1171,22 @@ else{
 }
 
 else{
-if(turn > 80 && (-m_stick2->GetZ() < 0)){
+if(turn > 65 && (-m_stick2->GetZ() < 0)){
   TurretTest->Set(ControlMode::PercentOutput, -abs(m_stick2->GetZ()/2));
 }
-else if(turn < -170 && (-m_stick2->GetZ() > 0)){
+else if(turn < -90 && (-m_stick2->GetZ() > 0)){
   TurretTest->Set(ControlMode::PercentOutput, abs(m_stick2->GetZ()/2));
 }
-else if(turn < -180 || turn > 90){
+else if(turn < -90 || turn > 65){
   TurretTest->Set(ControlMode::PercentOutput, 0);
 }
 else{
-  if(m_stick2->GetZ() == 1 || m_stick2->GetZ() == -1){
-  TurretTest->Set(ControlMode::PercentOutput, -m_stick2->GetZ());
-  }
-  TurretTest->Set(ControlMode::PercentOutput, -m_stick2->GetZ()/5);
+  if(m_stick2->GetZ() >= 0.95 || m_stick2->GetZ() <= -0.95){
+  TurretTest->Set(ControlMode::PercentOutput, -m_stick2->GetZ()/3);
+ }
+ else{
+  TurretTest->Set(ControlMode::PercentOutput, -m_stick2->GetZ()/6);
+}
 }
 }
 /*
@@ -1108,7 +1206,7 @@ else{
 Currently this is just to set the flywheel to different speeds for testing, later this will have a change of modes betweeen moving the speed up a down for shooting and a winch
 or three preset modes for close, the line and the trench shooting
 */
-double top = SmartDashboard::GetNumber("top", -1);
+double top = SmartDashboard::GetNumber("top", 1);
 double bottom = SmartDashboard::GetNumber("bottom", 1);
 
 if(m_stick2->GetRawButtonPressed(2) == 1){
@@ -1123,20 +1221,20 @@ else if (m_stick2->GetPOV() != -1){
   state = 0;
 }
 if(state == 1){
-  SparkTopFly.Set(0);
-  SparkBotFly.Set(0);
+  SparkTopFly.Set(-0.2);
+  SparkBotFly.Set(0.2);
   speedF = 0;
 }
 else if(state == 3){
-  SparkTopFly.Set(-0.6);
-  SparkBotFly.Set(0.6);
+  SparkTopFly.Set(-0.5);
+  SparkBotFly.Set(0.5);
   state = 3;
-  speedF = 0.6;
+  speedF = 0.5;
 }
 else if(state == 4){
   SparkTopFly.Set(-top);
   SparkBotFly.Set(bottom);
-  speedF = 0.7;
+  speedF = 0.4;
 }
 else{
    SparkTopFly.Set(0);
@@ -1201,11 +1299,12 @@ This runs the indexer up a down for loading and shooting balls, in later version
     Indexer->Set(ControlMode::PercentOutput,((m_stick2->GetRawAxis(4)+1)/2));
   }
   else if((m_stick2->GetRawAxis(3)+1)/2 > 0){
-  Indexer->Set(ControlMode::PercentOutput,-((m_stick2->GetRawAxis(3)+1)/2));
+    Indexer->Set(ControlMode::PercentOutput,-((m_stick2->GetRawAxis(4)+1)/2));
   }
   else{
     Indexer->Set(ControlMode::PercentOutput, 0);
   }
+  
 
 /*
 8888888          888             888               
@@ -1335,44 +1434,30 @@ if(ServoS == 2){
   Wheel->Set(0.35);
 }
 if(m_stick->GetRawButton(10) == 1){
-   //Turn->SetSpeed(0.5);
-   //Lpos = Turn->GetAngle();
-  //jwedhfkjdhjfgsjgjsdjfghsdjfghjdshgjsdhgksdkgnsjdghsdjnfgjlsndjgjgjdhgjhsdjghsjdhgjsdljghjhdgjhgjsdhgjhsjdhgjsdhgjdshfjdsfjshefjhskdhjfjdshfjshfkjehj
-   //if(Lpos >= 1){
-  //if(TopLimit->Get() == 1){
-    Lift->Set(ControlMode::PercentOutput, -0.7);
-    winch.Set(1);
-  //}
-  //else{
-    //Lift->Set(ControlMode::PercentOutput, 0); 
-  //}
-   //}
+  
 }
-else if(m_stick->GetRawButton(9) == 1){
-  //if(BottomLimit->Get() == 1){
-    Lift->Set(ControlMode::PercentOutput, 0.7);
-    winch.Set(-1);
-    
-  //}
-  //else{
-  //Lift->Set(ControlMode::PercentOutput, 0);
-  //Turn->SetSpeed(0);
+else if(m_stick->GetRawButton(9)){
+  winch.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
   }
 else{
-  Lift->Set(ControlMode::PercentOutput, 0); 
+  
 }
 
 if(m_stick2->GetRawButton(14) == 1){
-  Arm->Set(ControlMode::PercentOutput, -1);
+  Arm->Set(ControlMode::PercentOutput, 1);
+  
+  winch.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
 }
 else if(m_stick2->GetRawButton(13) == 1){
-  Arm->Set(ControlMode::PercentOutput, 0.2);
+  Arm->Set(ControlMode::PercentOutput, -0.2);
+  
+  winch.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
 }
 else {
   Arm->Set(ControlMode::PercentOutput, 0);
 }
 SmartDashboard::PutNumber("Toplimit", TopLimit->Get());
-SmartDashboard::PutNumber("bottomlimit",BottomLimit->Get());
+SmartDashboard::PutNumber("bottomlimit",light->GetValue());
 /*
 888       888 d8b                   888      
 888   o   888 Y8P                   888      
@@ -1384,23 +1469,25 @@ SmartDashboard::PutNumber("bottomlimit",BottomLimit->Get());
 888P     Y888 888 888  888  "Y8888P 888  888 
 */
 /* Code for the winch, making the winch idle at brake will hopefully not allow it to back drive*/
-winch.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
 double posi = winchE.GetPosition();
-if(m_stick2->GetRawButton(6) == 1){
+if(m_stick2->GetRawButton(6) == 1 && m_stick2->GetRawButton(14) != 1 && m_stick2->GetRawButton(13) != 1 ){
   winch.Set(1);
+  winch.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
 }
-else if(m_stick2->GetRawButton(5) == 1){
+else if(m_stick2->GetRawButton(5) == 1 && m_stick2->GetRawButton(14) != 1 && m_stick2->GetRawButton(13) != 1){
  winch.Set(-1);
- 
+ winch.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
 }
 else{
     winch.Set(0);
 }
-if(m_stick2->GetRawButton(10) == 1){
+if(m_stick2->GetRawButton(10) == 1 && m_stick->GetRawButton(10) != 1 && m_stick->GetRawButton(9) != 1){
   Lift->Set(ControlMode::PercentOutput, -1);
+  winch.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
 }
-else if(m_stick2->GetRawButton(9) == 1){
+else if(m_stick2->GetRawButton(9) == 1 && m_stick->GetRawButton(10) != 1 && m_stick->GetRawButton(9) != 1){
   Lift->Set(ControlMode::PercentOutput, 1);
+  winch.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
 }
 else{
   Lift->Set(ControlMode::PercentOutput, 0);
